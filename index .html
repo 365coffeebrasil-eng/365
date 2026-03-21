@@ -1,0 +1,2407 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; connect-src *;">
+<title>Tom Knauf — Content Machine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+:root{
+  /* Palette — light premium */
+  --bg:#F7F6F3;
+  --surface:#FFFFFF;
+  --surface2:#FAFAF8;
+  --surface3:#F2F1EE;
+  --border:#E8E6E1;
+  --border-soft:#F0EDE8;
+
+  /* Accent — warm gold/amber */
+  --accent:#B07D2E;
+  --accent-light:#FDF6E7;
+  --accent-mid:#F5E6C0;
+  --accent-text:#7A5520;
+
+  /* Text */
+  --text:#1A1916;
+  --text-2:#6B6560;
+  --text-3:#A8A39C;
+
+  /* Status */
+  --green:#2D7A4F;
+  --green-bg:#EDF7F2;
+  --green-border:#BFE4D0;
+  --red:#C0392B;
+  --red-bg:#FDF1F0;
+  --red-border:#F5C2BE;
+  --blue:#1A5FA8;
+  --blue-bg:#EEF4FC;
+  --blue-border:#BACED8;
+  --orange:#B85C1A;
+  --orange-bg:#FDF4EE;
+  --orange-border:#F5D5B8;
+  --purple:#5B3FA8;
+  --purple-bg:#F2EFFE;
+  --purple-border:#C8BAEF;
+
+  /* Shadow */
+  --shadow-xs:0 1px 2px rgba(26,25,22,.04);
+  --shadow-sm:0 2px 8px rgba(26,25,22,.06),0 1px 2px rgba(26,25,22,.04);
+  --shadow-md:0 4px 16px rgba(26,25,22,.08),0 2px 4px rgba(26,25,22,.04);
+
+  /* Typography */
+  --font-display:'Instrument Serif',Georgia,serif;
+  --font-body:'Geist',system-ui,sans-serif;
+  --font-mono:'Geist Mono',monospace;
+
+  /* Radius */
+  --r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:18px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:14px;min-height:100vh;line-height:1.5;}
+
+/* ── PAGE TRANSITIONS ── */
+.page{display:none;opacity:0;transform:translateY(6px);}
+.page.on{display:block;animation:pagein .22s ease forwards;}
+@keyframes pagein{to{opacity:1;transform:translateY(0);}}
+
+/* ── SHELL ── */
+.shell{display:flex;height:100vh;}
+
+/* ── SIDEBAR ── */
+.side{
+  width:200px;flex-shrink:0;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  overflow-y:auto;
+}
+.side::-webkit-scrollbar{width:0;}
+.side-logo{
+  padding:20px 18px 16px;
+  border-bottom:1px solid var(--border-soft);
+}
+.brand{
+  font-family:var(--font-display);
+  font-size:15px;
+  color:var(--text);
+  letter-spacing:-.01em;
+  line-height:1.2;
+}
+.brand-v{
+  font-family:var(--font-body);
+  font-size:10px;
+  color:var(--text-3);
+  margin-top:3px;
+  letter-spacing:.02em;
+  text-transform:uppercase;
+}
+.nav-g{padding:6px 0;}
+.nav-l{
+  font-size:9px;color:var(--text-3);
+  text-transform:uppercase;letter-spacing:.12em;
+  padding:10px 16px 3px;font-weight:500;
+}
+.ni{
+  display:flex;align-items:center;gap:7px;
+  padding:7px 16px;font-size:12px;
+  color:var(--text-2);cursor:pointer;
+  border-left:2px solid transparent;
+  transition:color .12s,background .12s;
+  border-radius:0;
+}
+.ni:hover{color:var(--text);background:var(--surface2);}
+.ni.on{
+  color:var(--accent-text);
+  border-left-color:var(--accent);
+  background:var(--accent-light);
+  font-weight:500;
+}
+.nb{
+  margin-left:auto;font-size:9px;
+  padding:1px 6px;border-radius:20px;
+  background:var(--accent-mid);
+  color:var(--accent-text);font-weight:600;
+}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
+
+.topbar{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:11px 22px;
+  display:flex;align-items:center;gap:10px;
+  flex-shrink:0;flex-wrap:wrap;
+  box-shadow:var(--shadow-xs);
+}
+.topbar input[type=password]{flex:1;max-width:380px;}
+
+.content{flex:1;overflow-y:auto;padding:24px;}
+.content::-webkit-scrollbar{width:5px;}
+.content::-webkit-scrollbar-track{background:transparent;}
+.content::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
+
+/* ── METRIC CARDS ── */
+.mrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
+.mc{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-lg);
+  padding:14px 16px;
+  box-shadow:var(--shadow-xs);
+  transition:box-shadow .15s,transform .15s;
+  position:relative;overflow:hidden;
+}
+.mc::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent-mid),transparent);
+  opacity:.6;
+}
+.mc:hover{box-shadow:var(--shadow-sm);transform:translateY(-1px);}
+.mv{font-size:24px;font-weight:600;color:var(--text);line-height:1;font-variant-numeric:tabular-nums;}
+.ml{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;font-weight:500;}
+
+/* ── CARDS ── */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-lg);
+  padding:18px 20px;
+  margin-bottom:14px;
+  box-shadow:var(--shadow-xs);
+  transition:box-shadow .15s;
+}
+.card:hover{box-shadow:var(--shadow-sm);}
+.ct{
+  font-size:13px;font-weight:600;
+  color:var(--text);margin-bottom:14px;
+  letter-spacing:-.01em;
+}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+/* ── BUTTONS ── */
+button,input,select,textarea{font-family:var(--font-body);}
+.btn{
+  padding:7px 14px;border-radius:var(--r-sm);
+  border:1px solid var(--border);
+  background:var(--surface);color:var(--text);
+  font-size:12px;cursor:pointer;font-weight:500;
+  transition:all .12s;
+  display:inline-flex;align-items:center;gap:5px;
+  white-space:nowrap;box-shadow:var(--shadow-xs);
+}
+.btn:hover{background:var(--surface2);border-color:var(--text-3);box-shadow:var(--shadow-sm);}
+.btn:active{transform:scale(.98);}
+.btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
+.bp{
+  background:var(--accent);border-color:var(--accent);
+  color:#fff;box-shadow:0 2px 6px rgba(176,125,46,.25);
+}
+.bp:hover{background:#9A6D25;border-color:#9A6D25;box-shadow:0 3px 10px rgba(176,125,46,.3);}
+.bg-btn{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 2px 6px rgba(45,122,79,.2);}
+.bg-btn:hover{background:#236640;border-color:#236640;}
+.bpu{background:var(--purple);border-color:var(--purple);color:#fff;}
+.bsm{padding:5px 11px;font-size:11px;border-radius:var(--r-sm);}
+
+/* ── INPUTS ── */
+input[type=text],input[type=password],input[type=number],input[type=date],input[type=time],select,textarea{
+  width:100%;padding:8px 11px;
+  border-radius:var(--r-sm);
+  border:1px solid var(--border);
+  background:var(--surface);color:var(--text);
+  font-size:13px;outline:none;
+  transition:border-color .12s,box-shadow .12s;
+  box-shadow:var(--shadow-xs);
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(176,125,46,.12);
+}
+input::placeholder{color:var(--text-3);}
+textarea{resize:vertical;line-height:1.6;}
+label{
+  font-size:11px;color:var(--text-2);
+  font-weight:500;display:block;margin-bottom:5px;
+  letter-spacing:.01em;
+}
+.field{margin-bottom:14px;}
+
+/* ── BADGES ── */
+.badge{
+  display:inline-flex;align-items:center;
+  padding:3px 9px;border-radius:20px;
+  font-size:10px;font-weight:600;
+  letter-spacing:.02em;
+}
+.bok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.bwarn{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-border);}
+.berr{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.binfo{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);}
+.bpu2{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border);}
+.bgray{background:var(--surface3);color:var(--text-2);border:1px solid var(--border);}
+.bgold{background:var(--accent-light);color:var(--accent-text);border:1px solid var(--accent-mid);}
+
+/* ── SPINNER ── */
+.spin{
+  width:13px;height:13px;
+  border:1.5px solid var(--border);
+  border-top-color:var(--accent);
+  border-radius:50%;
+  animation:sp .7s linear infinite;
+  display:inline-block;vertical-align:middle;
+}
+@keyframes sp{to{transform:rotate(360deg);}}
+
+/* ── STATUS DOTS ── */
+.dot{width:7px;height:7px;border-radius:50%;background:var(--border);display:inline-block;}
+.dot.g{background:var(--green);box-shadow:0 0 0 3px var(--green-bg);}
+.dot.r{background:var(--red);box-shadow:0 0 0 3px var(--red-bg);}
+.dot.a{background:var(--orange);box-shadow:0 0 0 3px var(--orange-bg);}
+
+/* ── MESSAGES ── */
+.mok{background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-md);padding:10px 14px;font-size:12px;color:var(--green);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.mer{background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--r-md);padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.min{background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--r-md);padding:10px 14px;font-size:12px;color:var(--blue);margin-bottom:14px;line-height:1.7;}
+.mwn{background:var(--orange-bg);border:1px solid var(--orange-border);border-radius:var(--r-md);padding:10px 14px;font-size:12px;color:var(--orange);margin-bottom:12px;}
+
+/* ── LOG BOX ── */
+.log-box{background:var(--text);border-radius:var(--r-lg);padding:14px;font-family:var(--font-mono);font-size:11px;max-height:320px;overflow-y:auto;line-height:1.7;color:#A8B4C0;}
+.lok{color:#5EC48A;}.ler{color:#F07070;}.lin{color:#E8C56A;}.lmu{color:#5A6472;}
+
+/* ── SCORE RING ── */
+.sr{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;font-size:12px;font-weight:600;flex-shrink:0;}
+.sh{background:var(--green-bg);color:var(--green);border:2px solid var(--green-border);}
+.sm{background:var(--orange-bg);color:var(--orange);border:2px solid var(--orange-border);}
+.sl{background:var(--red-bg);color:var(--red);border:2px solid var(--red-border);}
+.sn{background:var(--surface2);color:var(--text-3);border:1.5px solid var(--border);}
+
+/* ── FUNNEL ── */
+.fb{border-radius:var(--r-md);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;border:1px solid transparent;}
+.fb-b{background:var(--blue-bg);border-color:var(--blue-border);}.fb-b .fl,.fb-b .fv{color:var(--blue);}
+.fb-a{background:var(--orange-bg);border-color:var(--orange-border);}.fb-a .fl,.fb-a .fv{color:var(--orange);}
+.fb-g{background:var(--green-bg);border-color:var(--green-border);}.fb-g .fl,.fb-g .fv{color:var(--green);}
+.fb-p{background:var(--purple-bg);border-color:var(--purple-border);}.fb-p .fl,.fb-p .fv{color:var(--purple);}
+.fl{font-size:12px;font-weight:600;}.fv{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;}
+.fp{font-size:10px;color:var(--text-3);margin-top:2px;}
+
+/* ── OUTPUT BLOCKS ── */
+.output-block{
+  background:var(--surface2);
+  border:1px solid var(--border-soft);
+  border-radius:var(--r-md);
+  padding:14px;margin-bottom:10px;
+  border-left:3px solid var(--accent);
+}
+.output-label{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;font-weight:500;}
+.output-text{font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap;}
+
+/* ── TAGS ── */
+.tag{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:4px 10px;border-radius:20px;
+  background:var(--accent-light);
+  border:1px solid var(--accent-mid);
+  font-size:11px;margin:2px;cursor:default;
+  color:var(--accent-text);
+  transition:background .12s;
+}
+.tag .x{color:var(--accent-text);cursor:pointer;font-size:10px;opacity:.6;}
+.tag .x:hover{opacity:1;}
+
+/* ── PIPELINE CRM ── */
+.pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;}
+.pipe-col{background:var(--surface2);border-radius:var(--r-lg);padding:12px;border:1px solid var(--border-soft);}
+.pipe-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;color:var(--text-2);}
+.pipe-count{background:var(--surface);border-radius:20px;padding:1px 8px;font-size:10px;border:1px solid var(--border);}
+.pipe-item{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:10px;margin-bottom:7px;
+  font-size:11px;cursor:pointer;
+  transition:all .12s;box-shadow:var(--shadow-xs);
+}
+.pipe-item:hover{border-color:var(--accent);box-shadow:var(--shadow-sm);transform:translateY(-1px);}
+
+/* ── REELS SCENE ── */
+.reels-scene{
+  background:var(--surface2);border-radius:var(--r-md);
+  padding:12px 14px;margin-bottom:8px;
+  border-left:3px solid var(--border);
+  border:1px solid var(--border-soft);
+  border-left:3px solid var(--accent);
+}
+.scene-num{font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;}
+
+/* ── DECISION CARDS ── */
+.decision-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:14px;margin-bottom:10px;
+  box-shadow:var(--shadow-xs);transition:box-shadow .15s;
+}
+.decision-card:hover{box-shadow:var(--shadow-sm);}
+.decision-card.action{border-color:var(--red-border);background:var(--red-bg);}
+.decision-card.warning{border-color:var(--orange-border);background:var(--orange-bg);}
+.decision-card.approved{border-color:var(--green-border);background:var(--green-bg);}
+.p-ind{width:4px;border-radius:2px;flex-shrink:0;align-self:stretch;}
+.p-high{background:var(--red);}.p-med{background:var(--orange);}.p-low{background:var(--green);}
+
+/* ── A/B BAR ── */
+.ab-bar{height:5px;border-radius:3px;background:var(--surface3);overflow:hidden;margin-top:6px;}
+.ab-fill{height:100%;border-radius:3px;transition:width .6s ease;}
+
+/* ── CHAT ── */
+.chat-window{
+  background:var(--surface2);border-radius:var(--r-lg);
+  padding:16px;max-height:340px;overflow-y:auto;
+  margin-bottom:12px;border:1px solid var(--border-soft);
+}
+.chat-window::-webkit-scrollbar{width:4px;}
+.chat-window::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
+.msg{display:flex;gap:8px;margin-bottom:12px;animation:msgin .18s ease;}
+@keyframes msgin{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+.msg.ai{flex-direction:row-reverse;}
+.msg-bubble{
+  max-width:74%;padding:9px 13px;
+  border-radius:12px;font-size:12px;line-height:1.6;
+}
+.msg.user .msg-bubble{
+  background:var(--surface);
+  border:1px solid var(--border);
+  color:var(--text);
+}
+.msg.ai .msg-bubble{
+  background:var(--accent-light);
+  border:1px solid var(--accent-mid);
+  color:var(--accent-text);
+}
+.msg-avatar{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:600;flex-shrink:0;
+  border:1px solid var(--border);
+  background:var(--surface);color:var(--text-2);
+}
+
+/* ── TABLE ── */
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);font-weight:500;}
+td{padding:10px 12px;border-bottom:1px solid var(--border-soft);color:var(--text);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--surface2);}
+
+/* ── MISC ── */
+.hash-tag{font-family:var(--font-mono);font-size:9px;color:var(--text-3);}
+.fat-ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);border-radius:20px;padding:2px 9px;font-size:10px;font-weight:600;}
+.fat-warn{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-border);border-radius:20px;padding:2px 9px;font-size:10px;font-weight:600;}
+.fat-crit{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:20px;padding:2px 9px;font-size:10px;font-weight:600;}
+
+/* ── CHIP ── */
+.chip{
+  display:inline-flex;padding:5px 12px;border-radius:20px;
+  border:1px solid var(--border);font-size:11px;cursor:pointer;
+  color:var(--text-2);margin:3px;transition:all .12s;
+  background:var(--surface);font-weight:500;
+}
+.chip:hover{border-color:var(--accent);color:var(--accent-text);}
+.chip.on{background:var(--accent-light);border-color:var(--accent-mid);color:var(--accent-text);}
+
+/* ── DM TABS ── */
+.dm-tab-btn{
+  padding:9px 18px;font-size:12px;cursor:pointer;
+  color:var(--text-3);border-bottom:2px solid transparent;
+  margin-bottom:-1px;transition:all .15s;font-weight:500;
+}
+.dm-tab-btn.on{color:var(--accent-text);border-bottom-color:var(--accent);}
+.dm-tab-btn:hover{color:var(--text);}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<div class="side">
+  <div class="side-logo">
+    <div class="brand">TOM KNAUF</div>
+    <div class="brand-sub">Content Machine — v4 SaaS</div>
+  </div>
+
+  <div class="nav-g">
+    <div class="nav-l">Visão Geral</div>
+    <div class="ni on" onclick="go('pg-dash')">◈ Dashboard</div>
+    <div class="ni" onclick="go('pg-motores')">⚙ 4 Motores <span class="nb" id="nb-mot">IDLE</span></div>
+  </div>
+
+  <div class="nav-g">
+    <div class="nav-l">Estratégia</div>
+    <div class="ni" onclick="go('pg-avatar')">👤 Avatar do Cliente</div>
+    <div class="ni" onclick="go('pg-ofertas')">💰 Gerador de Ofertas</div>
+    <div class="ni" onclick="go('pg-gestor')">🤖 Gestor Autônomo</div>
+  </div>
+
+  <div class="nav-g">
+    <div class="nav-l">Conteúdo IG</div>
+    <div class="ni" onclick="go('pg-gerar')">✦ Gerar Posts</div>
+    <div class="ni" onclick="go('pg-dedup')">⊘ Deduplicador <span class="nb" id="nb-dup">0</span></div>
+    <div class="ni" onclick="go('pg-banco')">▤ Banco <span class="nb" id="nb-banco">0</span></div>
+    <div class="ni" onclick="go('pg-scoring')">◉ Scoring IA</div>
+    <div class="ni" onclick="go('pg-ab')">⚖ A/B Testing</div>
+    <div class="ni" onclick="go('pg-reescrita')">↺ Reescrita</div>
+    <div class="ni" onclick="go('pg-reels')">🎬 Roteiro Reels</div>
+    <div class="ni" onclick="go('pg-pub')">▲ Publicar</div>
+  </div>
+
+  <div class="nav-g">
+    <div class="nav-l">Tráfego Pago</div>
+    <div class="ni" onclick="go('pg-funil')">▽ Funil Ads</div>
+    <div class="ni" onclick="go('pg-metricas')">▣ Métricas</div>
+    <div class="ni" onclick="go('pg-fatigue')">⚠ Fatigue Detector</div>
+    <div class="ni" onclick="go('pg-lookalike')">◎ Lookalike</div>
+    <div class="ni" onclick="go('pg-vencedores')">★ Vencedores→Ads</div>
+  </div>
+
+  <div class="nav-g">
+    <div class="nav-l">Conversão</div>
+    <div class="ni" onclick="go('pg-dm')">✉ DM Autoresponder</div>
+    <div class="ni" onclick="go('pg-leadmagnet')">🧲 Lead Magnet</div>
+    <div class="ni" onclick="go('pg-landing')">📄 Landing Page</div>
+    <div class="ni" onclick="go('pg-crm')">🗂 CRM Pipeline</div>
+    <div class="ni" onclick="go('pg-followup')">📧 Follow-up Auto</div>
+    <div class="ni" onclick="go('pg-lead-score')">★ Score de Lead</div>
+  </div>
+
+  <div class="nav-g">
+    <div class="nav-l">Sistema</div>
+    <div class="ni" onclick="go('pg-config')">⚙ Configuracoes</div>
+    <div class="ni" onclick="go('pg-importar')">↑ Importar Posts</div>
+    <div class="ni" onclick="go('pg-log')">≡ Log</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <input type="password" id="ti" placeholder="Token Meta Ads + Instagram..." style="max-width:240px;"/>
+    <button class="btn bp" onclick="connect()">Conectar Meta</button>
+    <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);">
+      <div class="dot" id="cdot"></div><span id="ctxt">Aguardando...</span>
+    </div>
+    <div id="csp" style="display:none"><div class="spin"></div></div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+      <div id="ai-status" style="font-size:11px;padding:3px 10px;border-radius:20px;background:var(--surface3);color:var(--text3);">IA: nao configurada</div>
+      <button class="btn bsm" onclick="go('pg-config')" style="font-size:11px;">⚙ Chaves API</button>
+      <span style="font-size:11px;color:var(--text3);" id="avatar-bar">Avatar: nao configurado</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page on" id="pg-dash">
+      <div class="mrow">
+        <div class="mc"><div class="ml">Gasto 30d</div><div class="mv" id="d-spend">—</div></div>
+        <div class="mc"><div class="ml">Impressões</div><div class="mv" id="d-imp">—</div></div>
+        <div class="mc"><div class="ml">Cliques</div><div class="mv" id="d-clk">—</div></div>
+        <div class="mc"><div class="ml">CPL est.</div><div class="mv" id="d-cpl">—</div></div>
+        <div class="mc"><div class="ml">Seguidores</div><div class="mv" id="d-seg">—</div></div>
+        <div class="mc"><div class="ml">Posts banco</div><div class="mv" id="d-banco">0</div></div>
+        <div class="mc"><div class="ml">Score médio</div><div class="mv" id="d-score">—</div></div>
+        <div class="mc"><div class="ml">Leads CRM</div><div class="mv" id="d-leads">0</div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ct">Funil de conversão</div>
+          <div class="fb fb-b"><div><div class="fl">Reconhecimento</div><div class="fp">Impressões</div></div><div class="fv" id="fn1">—</div></div>
+          <div class="fb fb-a"><div><div class="fl">Engajamento</div><div class="fp">Cliques</div></div><div class="fv" id="fn2">—</div></div>
+          <div class="fb fb-g"><div><div class="fl">Leads</div><div class="fp">Est. 8%</div></div><div class="fv" id="fn3">—</div></div>
+          <div class="fb fb-p"><div><div class="fl">Conversão</div><div class="fp">Taxa</div></div><div class="fv" id="fn4">—</div></div>
+        </div>
+        <div class="card">
+          <div class="ct">Fluxo completo</div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
+            <div style="padding:8px;background:var(--surface2);border-radius:8px;">👤 <strong>Avatar</strong> → dores e desejos definidos</div>
+            <div style="text-align:center;font-size:10px;color:var(--text-3);">↓</div>
+            <div style="padding:8px;background:var(--surface2);border-radius:8px;">✦ <strong>Conteúdo</strong> → gerado, pontuado, deduplicado</div>
+            <div style="text-align:center;font-size:10px;color:var(--text-3);">↓</div>
+            <div style="padding:8px;background:var(--surface2);border-radius:8px;">▲ <strong>Publicação</strong> → Instagram automático</div>
+            <div style="text-align:center;font-size:10px;color:var(--text-3);">↓</div>
+            <div style="padding:8px;background:var(--surface2);border-radius:8px;">✉ <strong>DM IA</strong> → qualifica e envia WhatsApp</div>
+            <div style="text-align:center;font-size:10px;color:var(--text-3);">↓</div>
+            <div style="padding:8px;background:var(--surface2);border-radius:8px;">📧 <strong>Follow-up</strong> → automático até fechar</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AVATAR -->
+    <div class="page" id="pg-avatar">
+      <div class="min">Avatar define tudo — copy, oferta, conteúdo, DM. Sem avatar você fala para ninguém em específico.</div>
+      <div class="card">
+        <div class="ct">Perfil do cliente ideal</div>
+        <div class="g2">
+          <div class="field"><label>Nicho</label><input type="text" id="av-nicho" value="Empresários de serviços, MEI em crescimento"/></div>
+          <div class="field"><label>Cargo</label><input type="text" id="av-cargo" value="Sócio, CEO, empresário individual"/></div>
+        </div>
+        <div class="field"><label>Dores (Enter para adicionar)</label>
+          <div style="display:flex;gap:6px;margin-bottom:6px;"><input type="text" id="dor-input" placeholder="Ex: Paga imposto demais sem saber" onkeydown="if(event.key==='Enter')addTag('dor-input','dores-tags')"/><button class="btn bsm bp" onclick="addTag('dor-input','dores-tags')">+</button></div>
+          <div id="dores-tags" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
+        </div>
+        <div class="field"><label>Desejos</label>
+          <div style="display:flex;gap:6px;margin-bottom:6px;"><input type="text" id="desejo-input" placeholder="Ex: Pagar menos imposto legalmente" onkeydown="if(event.key==='Enter')addTag('desejo-input','desejos-tags')"/><button class="btn bsm bp" onclick="addTag('desejo-input','desejos-tags')">+</button></div>
+          <div id="desejos-tags" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
+        </div>
+        <div class="field"><label>Objeções</label>
+          <div style="display:flex;gap:6px;margin-bottom:6px;"><input type="text" id="obj-input" placeholder="Ex: Já tenho contador" onkeydown="if(event.key==='Enter')addTag('obj-input','objecoes-tags')"/><button class="btn bsm bp" onclick="addTag('obj-input','objecoes-tags')">+</button></div>
+          <div id="objecoes-tags" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn bp" onclick="salvarAvatar()">Salvar avatar</button>
+          <button class="btn bsm bpu" id="btn-av" onclick="gerarAvatarIA()">✦ Gerar com IA</button>
+          <div id="av-sp" style="display:none"><div class="spin"></div></div>
+        </div>
+        <div id="av-ok" class="mok" style="display:none;margin-top:8px;"></div>
+      </div>
+    </div>
+
+    <!-- GESTOR AUTÔNOMO -->
+    <div class="page" id="pg-gestor">
+      <div class="min">O gestor analisa seu contexto e decide: o que postar, quando, quanto investir, o que pausar e o que escalar.</div>
+      <div class="card">
+        <div class="ct">Contexto para o gestor</div>
+        <div class="g3">
+          <div class="field"><label>Orçamento mensal (R$)</label><input type="text" id="g-orc" value="1500"/></div>
+          <div class="field"><label>Meta leads/mês</label><input type="text" id="g-leads" value="50"/></div>
+          <div class="field"><label>Meta vendas/mês</label><input type="text" id="g-vendas" value="5"/></div>
+        </div>
+        <div class="field"><label>Situação atual</label><textarea id="g-sit" rows="3" placeholder="Ex: Posts sobre Fator R têm 3x mais engajamento. CPL R$45. Ainda não fechei venda pelo Instagram..."></textarea></div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn bp" id="btn-gest" onclick="runGestor()">🤖 Analisar e decidir</button>
+          <div id="gest-sp" style="display:none"><div class="spin"></div></div>
+        </div>
+      </div>
+      <div id="gest-output"></div>
+    </div>
+
+    <!-- OFERTAS -->
+    <div class="page" id="pg-ofertas">
+      <div class="card">
+        <div class="ct">Gerar ofertas persuasivas</div>
+        <div class="g3">
+          <div class="field"><label>Serviço</label><select id="of-serv"><option value="planejamento">Planejamento Tributário</option><option value="mentoria" selected>Mentoria 1:1 (R$1.200/mês)</option><option value="okto">OKTO SaaS</option></select></div>
+          <div class="field"><label>Variações</label><select id="of-qty"><option value="3">3</option><option value="5" selected>5</option><option value="10">10</option></select></div>
+          <div class="field"><label>Agressividade</label><select id="of-agr"><option value="suave">Suave</option><option value="medio" selected>Médio</option><option value="forte">Forte</option></select></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn bp" id="btn-of" onclick="gerarOfertas()">💰 Gerar ofertas</button>
+          <div id="of-sp" style="display:none"><div class="spin"></div></div>
+        </div>
+      </div>
+      <div id="of-output"></div>
+    </div>
+
+    <!-- GERAR POSTS -->
+    <div class="page" id="pg-gerar">
+      <div class="card">
+        <div class="ct">Motor 1 — Geração em Lote</div>
+        <div id="gen-chips" style="margin-bottom:10px;">
+          <span class="chip on" data-p="auto">Autoridade</span>
+          <span class="chip on" data-p="alert">Alertas</span>
+          <span class="chip on" data-p="edu">Educação</span>
+          <span class="chip on" data-p="reforma">Reforma</span>
+          <span class="chip on" data-p="mentor">Mentoria</span>
+          <span class="chip on" data-p="cont">Contabilidade</span>
+        </div>
+        <div class="g3">
+          <div class="field"><label>Quantidade</label><select id="gq"><option value="5">5</option><option value="10" selected>10</option><option value="20">20</option><option value="30">30</option></select></div>
+          <div class="field"><label>Tom</label><select id="gt"><option value="autoridade">Autoridade</option><option value="educativo">Educativo</option><option value="alerta">Alerta urgente</option></select></div>
+          <div class="field"><label>Auto-score</label><select id="gas"><option value="1" selected>Sim</option><option value="0">Não</option></select></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn bp" id="btn-gen" onclick="gerarLote()">✦ Gerar</button>
+          <div id="gen-sp" style="display:none"><div class="spin"></div></div>
+          <span id="gen-txt" style="font-size:11px;color:var(--text-3);"></span>
+        </div>
+      </div>
+      <div id="gen-result"></div>
+    </div>
+
+    <!-- DEDUP -->
+    <div class="page" id="pg-dedup">
+      <div class="min"><strong>SHA-256</strong> — cada post tem hash único. Antes de publicar, o sistema verifica se o conteúdo já existe. Nunca o mesmo post duas vezes.</div>
+      <div class="mrow">
+        <div class="mc"><div class="ml">Total banco</div><div class="mv" id="dd-t">0</div></div>
+        <div class="mc"><div class="ml">Duplicatas bloqueadas</div><div class="mv" id="dd-d" style="color:var(--red);">0</div></div>
+        <div class="mc"><div class="ml">Hashes únicos</div><div class="mv" id="dd-u">0</div></div>
+      </div>
+      <div class="card">
+        <div class="ct">Verificar texto manualmente</div>
+        <div class="field"><textarea id="dd-check" rows="3" placeholder="Cole a legenda aqui para verificar..."></textarea></div>
+        <button class="btn bp bsm" onclick="checkDedup()">Verificar</button>
+        <div id="dd-result" style="margin-top:8px;"></div>
+      </div>
+    </div>
+
+    <!-- BANCO -->
+    <div class="page" id="pg-banco">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+        <span style="font-size:13px;font-weight:600;" id="banco-count">0 posts</span>
+        <select id="bfilt" onchange="renderBanco()" style="width:auto;"><option value="">Todos</option><option value="pending">Pendentes</option><option value="approved">Aprovados</option><option value="published">Publicados</option><option value="winner">Vencedores</option></select>
+        <select id="bsort" onchange="renderBanco()" style="width:auto;"><option value="score">Score</option><option value="recent">Recentes</option></select>
+        <button class="btn bsm" onclick="go('pg-gerar')">+ Gerar mais</button>
+        <button class="btn bsm bpu" onclick="scoreAll()">◉ Pontuar todos</button>
+        <div id="sasp" style="display:none"><div class="spin"></div></div>
+      </div>
+      <div id="banco-list"></div>
+    </div>
+
+    <!-- SCORING -->
+    <div class="page" id="pg-scoring">
+      <div class="min">Avalia cada post em 4 dimensões: engajamento, clareza, força de venda, viral. Score ≥ 8 = aprovado.</div>
+      <div class="mrow">
+        <div class="mc"><div class="ml">Pontuados</div><div class="mv" id="sc-t">0</div></div>
+        <div class="mc"><div class="ml">Aprovados ≥8</div><div class="mv" id="sc-a" style="color:var(--green);">0</div></div>
+        <div class="mc"><div class="ml">Reprovados</div><div class="mv" id="sc-r" style="color:var(--red);">0</div></div>
+      </div>
+      <button class="btn bpu" id="bsa" onclick="scoreAll()">Pontuar todos pendentes</button>
+      <div id="scoring-list" style="margin-top:14px;"></div>
+    </div>
+
+    <!-- A/B -->
+    <div class="page" id="pg-ab">
+      <div class="min">Para cada post aprovado, a IA gera uma variante B com copy diferente. O vencedor vira base para novos posts.</div>
+      <div class="card">
+        <div class="ct">Criar teste A/B</div>
+        <div class="field"><label>Post base</label><select id="ab-post"><option value="">Selecione um post aprovado...</option></select></div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn bp" id="btn-ab" onclick="criarAB()">⚖ Gerar variante B</button>
+          <div id="ab-sp" style="display:none"><div class="spin"></div></div>
+        </div>
+      </div>
+      <div id="ab-list" style="margin-top:12px;"></div>
+    </div>
+
+    <!-- REESCRITA -->
+    <div class="page" id="pg-reescrita">
+      <div class="card">
+        <div class="ct">Reescrever post vencedor</div>
+        <div class="field"><label>Post original</label><textarea id="ree-orig" rows="4" placeholder="Cole aqui o post que mais performou..."></textarea></div>
+        <div class="g2">
+          <div class="field"><label>Variações</label><select id="ree-qty"><option value="3">3</option><option value="5" selected>5</option></select></div>
+          <div class="field"><label>Ângulo</label><select id="ree-ang"><option value="gancho" selected>Gancho diferente</option><option value="agressivo">Mais agressivo</option><option value="emocional">Mais emocional</option><option value="dados">Com dados</option><option value="historia">Formato história</option></select></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn bp" id="btn-ree" onclick="reescrever()">↺ Gerar variações</button>
+          <div id="ree-sp" style="display:none"><div class="spin"></div></div>
+        </div>
+      </div>
+      <div id="ree-output"></div>
+    </div>
+
+    <!-- REELS -->
+    <div class="page" id="pg-reels">
+      <div class="card">
+        <div class="ct">Roteiro completo de Reels</div>
+        <div class="g2">
+          <div class="field"><label>Tema</label><input type="text" id="rl-tema" placeholder="Ex: Por que você paga imposto a mais"/></div>
+          <div class="field"><label>Duração</label><select id="rl-dur"><option value="30">30s</option><option value="60" selected>60s</option><option value="90">90s</option></select></div>
+          <div class="field"><label>Estilo</label><select id="rl-est"><option value="educativo" selected>Educativo</option><option value="autoridade">Autoridade</option><option value="alerta">Alerta</option></select></div>
+          <div class="field"><label>CTA</label><select id="rl-cta"><option value="whatsapp" selected>WhatsApp</option><option value="dm">DM</option><option value="seguir">Seguir</option><option value="comentar">Comentar</option></select></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn bp" id="btn-rl" onclick="gerarReels()">🎬 Gerar roteiro</button>
+          <div id="rl-sp" style="display:none"><div class="spin"></div></div>
+        </div>
+      </div>
+      <div id="rl-output"></div>
+    </div>
+
+    <!-- PUBLICAR -->
+    <div class="page" id="pg-pub">
+      <div id="pu-err" class="mer" style="display:none"></div>
+      <div id="pu-ok" class="mok" style="display:none"></div>
+      <div class="mwn">Publica apenas posts aprovados (score ≥8) com ao menos 2 URLs de imagem.</div>
+      <div class="g2" style="margin-bottom:12px;">
+        <div class="field"><label>Quantidade</label><select id="pq"><option value="1">1 (teste)</option><option value="3">3</option><option value="5">5</option><option value="999">Todos aprovados</option></select></div>
+        <div class="field"><label>Filtrar pilar</label><select id="pp"><option value="">Todos</option><option value="auto">Autoridade</option><option value="alert">Alertas</option><option value="edu">Educação</option><option value="reforma">Reforma</option><option value="mentor">Mentoria</option><option value="cont">Contabilidade</option></select></div>
+      </div>
+      <div id="pu-prev" style="margin-bottom:12px;"></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn bg-btn" id="bpub" onclick="publicar()">▲ Publicar no Instagram</button>
+        <div id="pusp" style="display:none"><div class="spin"></div></div>
+      </div>
+    </div>
+
+    <!-- FUNIL ADS -->
+    <div class="page" id="pg-funil">
+      <div class="min">4 funis otimizados. Todos criados como PAUSED — ative no Gerenciador do Meta após revisar.</div>
+      <div style="margin-bottom:12px;">
+        <div class="fb fb-b" style="margin-bottom:5px;"><div><div class="fl">Funil 1 — Reconhecimento</div><div class="fp">AWARENESS · R$10/dia</div></div><span class="badge bgray" id="fb1">PENDENTE</span></div>
+        <div class="fb fb-a" style="margin-bottom:5px;"><div><div class="fl">Funil 2 — Tráfego</div><div class="fp">TRAFFIC · R$15/dia</div></div><span class="badge bgray" id="fb2">PENDENTE</span></div>
+        <div class="fb fb-g" style="margin-bottom:5px;"><div><div class="fl">Funil 3 — Leads</div><div class="fp">LEADS · R$20/dia</div></div><span class="badge bgray" id="fb3">PENDENTE</span></div>
+        <div class="fb fb-p"><div><div class="fl">Funil 4 — WhatsApp</div><div class="fp">ENGAGEMENT · R$30/dia</div></div><span class="badge bgray" id="fb4">PENDENTE</span></div>
+      </div>
+      <div class="g2" style="margin-bottom:12px;">
+        <div class="field"><label>Conta de anúncios</label><select id="fa"><option value="">Conecte para carregar</option></select></div>
+        <div class="field"><label>Página Facebook</label><select id="fp2"><option value="">Conecte para carregar</option></select></div>
+        <div class="field"><label>URL Landing Page</label><input type="text" id="fu-url" value="https://tomknauf.com.br"/></div>
+        <div class="field"><label>WhatsApp</label><input type="text" id="fu-wa" value="5567999999999"/></div>
+      </div>
+      <div id="funil-err" class="mer" style="display:none"></div>
+      <div id="funil-ok" class="mok" style="display:none"></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn bp" onclick="subirFunil()">Subir funil completo</button>
+        <div id="fsp" style="display:none"><div class="spin"></div></div>
+      </div>
+    </div>
+
+    <!-- MÉTRICAS -->
+    <div class="page" id="pg-metricas">
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
+        <select id="ma" style="width:auto;min-width:180px;"><option value="">Conta...</option></select>
+        <select id="mp" style="width:auto;"><option value="last_7d" selected>7 dias</option><option value="last_30d">30 dias</option><option value="this_month">Este mês</option></select>
+        <button class="btn bsm" onclick="loadMet()">↺ Atualizar</button>
+        <div id="msp" style="display:none"><div class="spin"></div></div>
+      </div>
+      <div class="mrow" id="met-c"></div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr id="met-head" style="border-bottom:1px solid var(--border);">
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;">Data</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;">Impressões</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;">Cliques</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;">CTR</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;">Gasto</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;">CPM</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;">CPC</th>
+          </tr></thead>
+          <tbody id="met-tb"><tr><td colspan="7" style="text-align:center;color:var(--text-3);padding:16px;font-size:12px;">Selecione conta e clique em Atualizar.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FATIGUE -->
+    <div class="page" id="pg-fatigue">
+      <div class="min">Monitora CPM, CTR e frequência. Quando CPM sobe >30%, CTR cai >20% ou frequência passa 4x → alerta de fadiga.</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+        <select id="fat-acc" style="width:auto;min-width:200px;"><option value="">Selecione conta...</option></select>
+        <button class="btn bsm" onclick="runFatigue()">↺ Analisar</button>
+        <div id="fatsp" style="display:none"><div class="spin"></div></div>
+      </div>
+      <div id="fat-list"><div style="font-size:12px;color:var(--text-3);">Selecione conta e clique em Analisar.</div></div>
+    </div>
+
+    <!-- LOOKALIKE -->
+    <div class="page" id="pg-lookalike">
+      <div class="min">Lookalike 1% = CPL até 3x mais barato que público frio. Crie Custom Audience primeiro, depois Lookalike.</div>
+      <div class="card">
+        <div class="ct">Criar Custom Audience</div>
+        <div class="g2" style="margin-bottom:10px;">
+          <div class="field"><label>Conta</label><select id="la-acc"><option value="">Selecione...</option></select></div>
+          <div class="field"><label>Nome</label><input type="text" id="la-name" value="TK — Clientes Ativos"/></div>
+        </div>
+        <div id="la-err" class="mer" style="display:none"></div>
+        <div id="la-ok" class="mok" style="display:none"></div>
+        <button class="btn bp bsm" onclick="criarCustomAudience()">Criar Custom Audience</button>
+        <div style="margin-top:16px;" class="ct">Criar Lookalike</div>
+        <div class="g2" style="margin-top:8px;">
+          <div class="field"><label>ID da Custom Audience</label><input type="text" id="la-ca-id" placeholder="12345678"/></div>
+          <div class="field"><label>Percentual</label><select id="la-pct"><option value="0.01">1% — mais similar</option><option value="0.02">2%</option><option value="0.05">5%</option></select></div>
+        </div>
+        <div id="ll-err" class="mer" style="display:none"></div>
+        <div id="ll-ok" class="mok" style="display:none"></div>
+        <button class="btn bp bsm" onclick="criarLookalike()">Criar Lookalike Audience</button>
+      </div>
+    </div>
+
+    <!-- VENCEDORES → ADS -->
+    <div class="page" id="pg-vencedores">
+      <div class="min">Posts com score ≥9 viram anúncios automaticamente. Copy orgânico que já provou engajamento = CPL menor.</div>
+      <div class="card">
+        <div class="ct">Posts vencedores</div>
+        <div id="win-list"><div style="font-size:12px;color:var(--text-3);">Nenhum vencedor ainda.</div></div>
+      </div>
+      <div class="g2" style="margin-bottom:12px;">
+        <div class="field"><label>Conta</label><select id="wa-acc"><option value="">Selecione...</option></select></div>
+        <div class="field"><label>Página</label><select id="wa-page"><option value="">Selecione...</option></select></div>
+        <div class="field"><label>Orçamento diário</label><select id="wa-bud"><option value="1000">R$10/dia</option><option value="2000" selected>R$20/dia</option><option value="3000">R$30/dia</option></select></div>
+        <div class="field"><label>Objetivo</label><select id="wa-obj"><option value="OUTCOME_LEADS" selected>Leads</option><option value="OUTCOME_TRAFFIC">Tráfego</option></select></div>
+      </div>
+      <div id="wa-err" class="mer" style="display:none"></div>
+      <div id="wa-ok" class="mok" style="display:none"></div>
+      <button class="btn bp" onclick="criarAdsVencedores()">◫ Criar Ads dos vencedores</button>
+      <div id="wasp" style="display:none;display:inline-block;"><div class="spin"></div></div>
+    </div>
+
+    <!-- DM AUTORESPONDER COMPLETO -->
+    <div class="page" id="pg-dm">
+      <div class="min">IA responde DMs e comentários relacionados a tributação. Qualifica o lead em até 3 perguntas, detecta intenção de compra e escalona para você. Inbox, histórico, escalados e comentários — tudo integrado.</div>
+
+      <!-- STATS DM -->
+      <div class="mrow" style="margin-bottom:14px;">
+        <div class="mc"><div class="ml">DMs respondidas</div><div class="mv" id="dm-stat-resp">0</div></div>
+        <div class="mc"><div class="ml">Leads qualificados</div><div class="mv" id="dm-stat-leads" style="color:var(--green);">0</div></div>
+        <div class="mc"><div class="ml">HOT (alta intenção)</div><div class="mv" id="dm-stat-hot" style="color:var(--red);">0</div></div>
+        <div class="mc"><div class="ml">Escalados p/ você</div><div class="mv" id="dm-stat-esc" style="color:var(--accent);">0</div></div>
+        <div class="mc"><div class="ml">WhatsApp enviados</div><div class="mv" id="dm-stat-wa">0</div></div>
+        <div class="mc"><div class="ml">Comentários resp.</div><div class="mv" id="dm-stat-com">0</div></div>
+      </div>
+
+      <!-- TABS DM -->
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px;">
+        <div id="dmt-inbox" style="padding:9px 18px;font-size:12px;cursor:pointer;color:var(--accent);border-bottom:2px solid var(--accent);margin-bottom:-1px;font-weight:600;" onclick="switchDMTab('inbox')">✉ Simulador / Inbox</div>
+        <div id="dmt-esc" style="padding:9px 18px;font-size:12px;cursor:pointer;color:var(--text-3);border-bottom:2px solid transparent;margin-bottom:-1px;" onclick="switchDMTab('esc')">🔴 Escalados <span id="dm-esc-count" style="background:var(--red);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:3px;">0</span></div>
+        <div id="dmt-com" style="padding:9px 18px;font-size:12px;cursor:pointer;color:var(--text-3);border-bottom:2px solid transparent;margin-bottom:-1px;" onclick="switchDMTab('com')">◎ Comentários</div>
+        <div id="dmt-cfg" style="padding:9px 18px;font-size:12px;cursor:pointer;color:var(--text-3);border-bottom:2px solid transparent;margin-bottom:-1px;" onclick="switchDMTab('cfg')">⚙ Configurar</div>
+        <div id="dmt-hist" style="padding:9px 18px;font-size:12px;cursor:pointer;color:var(--text-3);border-bottom:2px solid transparent;margin-bottom:-1px;" onclick="switchDMTab('hist')">▤ Histórico de Leads</div>
+      </div>
+
+      <!-- TAB: SIMULADOR/INBOX -->
+      <div id="dmtab-inbox">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div class="ct" style="margin:0;">Simular / Testar IA</div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span style="font-size:11px;color:var(--text-3);">IA ativa:</span>
+              <div id="ia-sw" style="width:32px;height:18px;border-radius:9px;background:var(--accent);position:relative;cursor:pointer;transition:background .2s;" onclick="toggleIASw()">
+                <div id="ia-sw-dot" style="position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:2px;left:16px;transition:left .2s;"></div>
+              </div>
+            </div>
+          </div>
+          <div class="chat-window" id="dm-msgs" style="min-height:220px;"></div>
+          <!-- INTENT BAR -->
+          <div id="dm-intent-bar" style="display:none;background:var(--surface2);border-radius:8px;padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;">
+            <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.8px;white-space:nowrap;">Intenção</div>
+            <div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;"><div id="dm-intent-fill" style="height:100%;background:var(--accent);border-radius:3px;width:0%;transition:width .5s;"></div></div>
+            <span id="dm-intent-pct" style="font-size:13px;font-weight:600;color:var(--accent);">0%</span>
+            <span class="badge bgray" id="dm-intent-tier">—</span>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <input type="text" id="dm-input" placeholder="Simule uma mensagem de lead..." onkeydown="if(event.key==='Enter')enviarDM()" style="flex:1;"/>
+            <button class="btn bp bsm" onclick="enviarDM()">Enviar</button>
+            <button class="btn bsm" onclick="resetDM()">↺</button>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn bsm" onclick="simDM('Quero reduzir meus impostos, como funciona?')">Lead morno</button>
+            <button class="btn bsm" onclick="simDM('Preciso urgente de consultoria, minha empresa fatura 500k')">Lead quente</button>
+            <button class="btn bsm" onclick="simDM('Quanto custa a mentoria?')">Intenção direta</button>
+            <button class="btn bsm" onclick="simDM('Meu MEI está quase estourando o limite')">Urgência MEI</button>
+            <button class="btn bsm" onclick="simDM('Oi tudo bem?')">Fora do tópico</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: ESCALADOS -->
+      <div id="dmtab-esc" style="display:none;">
+        <div class="mwn">Leads com intenção de compra ≥ threshold. A IA já enviou o link do WhatsApp. <strong>Responda em até 30 minutos para maximizar conversão.</strong></div>
+        <div id="dm-esc-list"><div style="font-size:12px;color:var(--text-3);">Nenhum lead escalado ainda. Simule conversas na aba Simulador.</div></div>
+      </div>
+
+      <!-- TAB: COMENTÁRIOS -->
+      <div id="dmtab-com" style="display:none;">
+        <div class="min">A IA responde automaticamente comentários relacionados a tributação. Comentários fora do tópico são ignorados.</div>
+        <div class="card">
+          <div class="ct">Responder comentário com IA</div>
+          <div class="field"><label>Texto do comentário</label><textarea id="com-texto" rows="2" placeholder="Cole aqui o comentário do seguidor..."></textarea></div>
+          <div class="field"><label>Post relacionado (opcional)</label><input type="text" id="com-post" placeholder="Ex: Post sobre Fator R, Reforma Tributária..."/></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn bp bsm" id="btn-com" onclick="responderComentario()">✦ IA responder</button>
+            <div id="com-sp" style="display:none"><div class="spin"></div></div>
+          </div>
+          <div id="com-result" style="margin-top:10px;"></div>
+        </div>
+        <div class="card" style="margin-top:4px;">
+          <div class="ct">Exemplos de respostas por tipo</div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+            <div style="padding:10px;background:var(--surface2);border-radius:8px;"><strong>Dúvida técnica:</strong> IA explica brevemente e convida para DM ou WhatsApp</div>
+            <div style="padding:10px;background:var(--surface2);border-radius:8px;"><strong>Elogio / identificação:</strong> IA agradece e reforça CTA para aprofundar</div>
+            <div style="padding:10px;background:var(--surface2);border-radius:8px;"><strong>Objeção:</strong> IA quebra a objeção com dado ou argumento</div>
+            <div style="padding:10px;background:var(--surface2);border-radius:8px;"><strong>Fora do tópico:</strong> IA redireciona gentilmente ou ignora</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: CONFIGURAR -->
+      <div id="dmtab-cfg" style="display:none;">
+        <div class="card">
+          <div class="ct">Identidade e comportamento da IA</div>
+          <div class="g2">
+            <div class="field"><label>WhatsApp (link completo)</label><input type="text" id="dm-wa" value="https://wa.me/5567999999999?text=Vim+pelo+Instagram+e+quero+saber+mais+sobre+consultoria+tributária"/></div>
+            <div class="field"><label>Threshold de escalação</label><select id="dm-thr"><option value="60">60% — mais sensível</option><option value="70" selected>70% — recomendado</option><option value="80">80% — só muito quente</option></select></div>
+          </div>
+          <div class="field"><label>Apresentação inicial da IA</label><textarea id="dm-intro" rows="2">Olá! Sou o assistente da Tom Knauf Inteligência Tributária. Como posso te ajudar com planejamento tributário?</textarea></div>
+          <div class="field"><label>Mensagem ao enviar WhatsApp</label><textarea id="dm-wa-msg" rows="2">Para continuarmos e apresentar as soluções certas para sua empresa, acesse o WhatsApp do Tom Knauf: {LINK} — Atendimento personalizado.</textarea></div>
+          <div style="margin-top:4px;" class="mok">Configurações salvas automaticamente.</div>
+        </div>
+        <div class="card">
+          <div class="ct">Tópicos que a IA responde (ignora o resto)</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            <span class="badge bok">Planejamento tributário</span><span class="badge bok">Simples Nacional</span>
+            <span class="badge bok">Lucro Presumido / Real</span><span class="badge bok">Fator R</span>
+            <span class="badge bok">Reforma Tributária</span><span class="badge bok">MEI / CNPJ</span>
+            <span class="badge bok">Impostos</span><span class="badge bok">Contabilidade</span>
+            <span class="badge bok">Pró-labore</span><span class="badge bok">Holding</span>
+            <span class="badge bok">Mentoria</span><span class="badge bok">Consultoria</span>
+            <span class="badge bok">Reduzir imposto</span><span class="badge bok">Regime tributário</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: HISTÓRICO -->
+      <div id="dmtab-hist" style="display:none;">
+        <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
+          <span style="font-size:13px;font-weight:600;" id="dm-leads-count">0 leads</span>
+          <select id="dm-leads-filter" onchange="renderDMLeads()" style="width:auto;">
+            <option value="">Todos</option><option value="HOT">HOT</option><option value="WARM">WARM</option><option value="COLD">COLD</option>
+          </select>
+          <button class="btn bsm" onclick="exportDMLeads()">↓ Exportar CSV</button>
+        </div>
+        <div id="dm-leads-list"><div style="font-size:12px;color:var(--text-3);">Nenhum lead capturado ainda.</div></div>
+      </div>
+    </div>
+
+    <!-- LEAD MAGNET -->
+    <div class="page" id="pg-leadmagnet">
+      <div class="card">
+        <div class="ct">Criar lead magnet</div>
+        <div class="g2">
+          <div class="field"><label>Tipo</label><select id="lm-tipo"><option value="checklist" selected>Checklist</option><option value="ebook">E-book mini</option><option value="guia">Guia prático</option><option value="diagnostico">Diagnóstico gratuito</option></select></div>
+          <div class="field"><label>Tema</label><input type="text" id="lm-tema" value="Como saber se sua empresa está no regime tributário certo"/></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn bp" id="btn-lm" onclick="gerarLeadMagnet()">🧲 Gerar</button>
+          <div id="lm-sp" style="display:none"><div class="spin"></div></div>
+        </div>
+      </div>
+      <div id="lm-output"></div>
+    </div>
+
+    <!-- LANDING -->
+    <div class="page" id="pg-landing">
+      <div class="card">
+        <div class="ct">Gerar copy de landing page</div>
+        <div class="g2">
+          <div class="field"><label>Produto</label><select id="lp-prod"><option value="mentoria" selected>Mentoria 1:1</option><option value="planejamento">Planejamento Tributário</option><option value="diagnostico">Diagnóstico gratuito</option></select></div>
+          <div class="field"><label>Objetivo</label><select id="lp-obj"><option value="whatsapp" selected>WhatsApp</option><option value="formulario">Formulário</option><option value="compra">Compra direta</option></select></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn bp" id="btn-lp" onclick="gerarLanding()">📄 Gerar copy</button>
+          <div id="lp-sp" style="display:none"><div class="spin"></div></div>
+        </div>
+      </div>
+      <div id="lp-output"></div>
+    </div>
+
+    <!-- CRM -->
+    <div class="page" id="pg-crm">
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+        <button class="btn bp bsm" onclick="showAddLead()">+ Adicionar lead</button>
+        <button class="btn bsm" onclick="renderPipeline()">↺</button>
+        <span style="font-size:12px;color:var(--text-3);" id="crm-total">0 leads</span>
+      </div>
+      <div class="pipeline" id="pipeline"></div>
+      <div id="add-lead-form" style="display:none;" class="card">
+        <div class="ct">Novo lead</div>
+        <div class="g2">
+          <div class="field"><label>Nome</label><input type="text" id="nl-nome"/></div>
+          <div class="field"><label>WhatsApp</label><input type="text" id="nl-wa" placeholder="5567..."/></div>
+          <div class="field"><label>Empresa</label><input type="text" id="nl-emp"/></div>
+          <div class="field"><label>Origem</label><select id="nl-orig"><option value="instagram">Instagram</option><option value="indicacao">Indicação</option><option value="anuncio">Anúncio</option><option value="manual">Manual</option></select></div>
+          <div class="field"><label>Estágio</label><select id="nl-stage"><option value="novo">Novo</option><option value="contato">Em contato</option><option value="proposta">Proposta</option><option value="negociacao">Negociação</option><option value="fechado">Fechado</option></select></div>
+          <div class="field"><label>Faturamento</label><select id="nl-fat"><option value="ate100k">Até 100k</option><option value="100k-500k">100k–500k</option><option value="500k-2m">500k–2M</option><option value="acima2m">+2M</option></select></div>
+        </div>
+        <div class="field"><label>Obs.</label><textarea id="nl-obs" rows="2"></textarea></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn bp bsm" onclick="salvarLead()">Salvar</button>
+          <button class="btn bsm" onclick="document.getElementById('add-lead-form').style.display='none'">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOLLOW-UP -->
+    <div class="page" id="pg-followup">
+      <div class="card">
+        <div class="ct">Gerar sequência de follow-up</div>
+        <div class="g2">
+          <div class="field"><label>Estágio do lead</label><select id="fu-stage"><option value="novo">Novo lead</option><option value="sem-resposta">Sem resposta 48h</option><option value="interessado">Demonstrou interesse</option><option value="proposta">Proposta enviada</option><option value="perdido">Lead frio — reativar</option></select></div>
+          <div class="field"><label>Canal</label><select id="fu-canal"><option value="whatsapp" selected>WhatsApp</option><option value="instagram">Instagram DM</option><option value="email">E-mail</option></select></div>
+          <div class="field"><label>Mensagens</label><select id="fu-qty"><option value="3">3</option><option value="5" selected>5</option><option value="7">7</option></select></div>
+          <div class="field"><label>Tom</label><select id="fu-tom"><option value="consultivo" selected>Consultivo</option><option value="urgencia">Urgência</option><option value="social-proof">Prova social</option></select></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn bp" id="btn-fu" onclick="gerarFollowup()">📧 Gerar sequência</button>
+          <div id="fu-sp" style="display:none"><div class="spin"></div></div>
+        </div>
+      </div>
+      <div id="fu-output"></div>
+    </div>
+
+    <!-- SCORE DE LEAD -->
+    <div class="page" id="pg-lead-score">
+      <div class="card">
+        <div class="ct">Qualificar lead com IA</div>
+        <div class="g2">
+          <div class="field"><label>Nome</label><input type="text" id="ls-nome" placeholder="João Silva"/></div>
+          <div class="field"><label>Cargo</label><input type="text" id="ls-cargo" placeholder="Sócio, CEO..."/></div>
+          <div class="field"><label>Tipo empresa</label><select id="ls-tipo"><option value="mei">MEI</option><option value="me">ME/EPP</option><option value="media">Média empresa</option><option value="grande">Grande empresa</option></select></div>
+          <div class="field"><label>Faturamento</label><select id="ls-fat"><option value="ate100k">Até R$100k/ano</option><option value="100k-500k">R$100k–500k</option><option value="500k-2m">R$500k–2M</option><option value="acima2m">Acima R$2M</option></select></div>
+        </div>
+        <div class="field"><label>Mensagem do lead</label><textarea id="ls-msg" rows="3" placeholder="O que o lead escreveu..."></textarea></div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn bp" id="bls" onclick="scoreLead()">★ Qualificar</button>
+          <div id="lssp" style="display:none"><div class="spin"></div></div>
+        </div>
+      </div>
+      <div id="ls-result" style="margin-top:12px;"></div>
+    </div>
+
+    <!-- CONFIGURACOES -->
+    <div class="page" id="pg-config">
+      <div class="min">Configure suas chaves de API aqui. Elas ficam salvas no navegador (localStorage) e nunca sao enviadas para ninguem alem das proprias APIs.</div>
+
+      <div class="card">
+        <div class="ct">Inteligencia Artificial</div>
+        <div class="g2">
+          <div class="field">
+            <label>Chave Anthropic (Claude) — obrigatoria</label>
+            <input type="password" id="cfg-ant" placeholder="sk-ant-..." />
+            <div style="font-size:10px;color:var(--text3);margin-top:3px;">Obtenha em console.anthropic.com</div>
+          </div>
+          <div class="field">
+            <label>Chave OpenAI (GPT) — opcional</label>
+            <input type="password" id="cfg-oai" placeholder="sk-..." />
+            <div style="font-size:10px;color:var(--text3);margin-top:3px;">Obtenha em platform.openai.com</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>IA padrao para geracao de conteudo</label>
+          <select id="cfg-ai-provider">
+            <option value="claude" selected>Claude (Anthropic) — recomendado</option>
+            <option value="gpt">GPT-4 (OpenAI)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ct">Meta Ads + Instagram</div>
+        <div class="field">
+          <label>Access Token Meta</label>
+          <input type="password" id="cfg-meta" placeholder="EAAof..." />
+          <div style="font-size:10px;color:var(--text3);margin-top:3px;">Cole aqui para nao precisar colar toda vez. Obtenha em developers.facebook.com/tools/explorer</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ct">Dados do negocio</div>
+        <div class="g2">
+          <div class="field"><label>Seu nome</label><input type="text" id="cfg-nome" value="Tom Knauf" /></div>
+          <div class="field"><label>Instagram</label><input type="text" id="cfg-ig" value="@tomknauf_" /></div>
+          <div class="field"><label>WhatsApp (link)</label><input type="text" id="cfg-wa" value="https://wa.me/5567999999999" /></div>
+          <div class="field"><label>Site / Landing Page</label><input type="text" id="cfg-site" value="https://tomknauf.com.br" /></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn bp" onclick="salvarConfig()">Salvar configuracoes</button>
+        <div id="cfg-ok" class="mok" style="display:none;margin:0;">Configuracoes salvas!</div>
+      </div>
+    </div>
+
+    <!-- IMPORTAR POSTS -->
+    <div class="page" id="pg-importar">
+      <div class="min">Importe posts que voce ja criou. Cole um por vez ou importe em lote via JSON. Os posts entram no Banco com status Aprovado e ficam prontos para publicar.</div>
+
+      <div class="card">
+        <div class="ct">Importar post manual</div>
+        <div class="field"><label>Titulo do post</label><input type="text" id="imp-titulo" placeholder="Ex: Por que voce paga imposto a mais" /></div>
+        <div class="field"><label>Legenda completa (com hashtags)</label><textarea id="imp-caption" rows="5" placeholder="Cole aqui a legenda que voce ja usou ou quer usar..."></textarea></div>
+        <div class="g2">
+          <div class="field"><label>Pilar</label>
+            <select id="imp-pilar">
+              <option value="auto">Autoridade</option>
+              <option value="alert">Alertas</option>
+              <option value="edu">Educacao</option>
+              <option value="reforma">Reforma</option>
+              <option value="mentor">Mentoria</option>
+              <option value="cont">Contabilidade</option>
+            </select>
+          </div>
+          <div class="field"><label>URL slide 1 (opcional)</label><input type="text" id="imp-slide1" placeholder="https://..." /></div>
+          <div class="field"><label>URL slide 2 (opcional)</label><input type="text" id="imp-slide2" placeholder="https://..." /></div>
+          <div class="field"><label>URL slide 3 (opcional)</label><input type="text" id="imp-slide3" placeholder="https://..." /></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn bp" onclick="importarPost()">+ Adicionar ao banco</button>
+        </div>
+        <div id="imp-ok" class="mok" style="display:none;margin-top:8px;"></div>
+      </div>
+
+      <div class="card">
+        <div class="ct">Importar em lote (JSON)</div>
+        <div class="min" style="margin-bottom:10px;">Formato esperado: array de objetos com title, caption, pillar (auto/alert/edu/reforma/mentor/cont)</div>
+        <div class="field">
+          <label>Cole o JSON aqui</label>
+          <textarea id="imp-json" rows="8" placeholder='[{"title":"Titulo do post","caption":"Legenda completa #hashtag","pillar":"auto"},{"title":"...","caption":"...","pillar":"edu"}]'></textarea>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn bp" onclick="importarJSON()">Importar JSON</button>
+          <div id="imp-json-sp" style="display:none"><div class="spin"></div></div>
+        </div>
+        <div id="imp-json-ok" class="mok" style="display:none;margin-top:8px;"></div>
+        <div id="imp-json-err" class="mer" style="display:none;margin-top:8px;"></div>
+      </div>
+
+      <div class="card">
+        <div class="ct">Posts importados</div>
+        <div id="imp-lista"><div style="font-size:12px;color:var(--text3);">Nenhum post importado ainda.</div></div>
+      </div>
+    </div>
+
+    <!-- LOG -->
+    <div class="page" id="pg-log">
+      <div class="log-box" id="log-main"><span class="lmu">Aguardando...</span></div>
+      <div style="margin-top:8px;"><button class="btn bsm" onclick="clearLog()">Limpar</button></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+
+
+<script>
+
+const GRAPH = 'https://graph.facebook.com/v19.0';
+const ANT   = '/api/ai';
+let TOKEN='',IGID='',ACCS=[],PAGES=[];
+let postBank=[],abTests=[],leads=[],dupCount=0,hashSet=new Set();
+let avatar={nicho:'Empresarios de servicos',cargo:'Socio CEO',dores:['Paga imposto demais sem saber','Esta no regime errado','Com medo da Reforma Tributaria'],desejos:['Pagar menos imposto legalmente','Ter previsibilidade fiscal'],objecoes:['Ja tenho contador','E muito caro']};
+let dmHistory=[];
+
+const PL={auto:'Autoridade',alert:'Alertas',edu:'Educação',reforma:'Reforma',cont:'Contabilidade',mentor:'Mentoria'};
+const STAGES=['novo','contato','proposta','negociacao','fechado'];
+const STAGE_LABELS={novo:'Novo Lead',contato:'Em Contato',proposta:'Proposta',negociacao:'Negociacao',fechado:'Fechado OK'};
+const STAGE_COLORS={novo:'#5296e0',contato:'#e09052',proposta:'#C9A027',negociacao:'#9052e0',fechado:'#52c07a'};
+
+// ─── NAV ───
+function go(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  document.querySelectorAll('.ni').forEach(n=>{n.classList.toggle('on',(n.getAttribute('onclick')||'').includes("'"+id+"'"));});
+  if(id==='pg-banco')renderBanco();
+  if(id==='pg-scoring')renderScoring();
+  if(id==='pg-ab'){renderAB();populateABSelect();}
+  if(id==='pg-pub')renderPubPreview();
+  if(id==='pg-vencedores')renderWinners();
+  if(id==='pg-crm')renderPipeline();
+}
+
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>c.classList.toggle('on')));
+
+// ─── UTILS ───
+function log(msg,type=''){
+  const b=document.getElementById('log-main');
+  if(b.querySelector('.lmu'))b.innerHTML='';
+  const d=document.createElement('div');d.className=type?'l'+type:'';
+  d.textContent='['+new Date().toLocaleTimeString('pt-BR')+'] '+msg;
+  b.appendChild(d);b.scrollTop=b.scrollHeight;
+}
+function clearLog(){document.getElementById('log-main').innerHTML='';}
+function fmt(v,d=2){return parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});}
+function fmtN(v){return parseInt(v||0).toLocaleString('pt-BR');}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+async function aiCall(prompt,max=2000){
+  const r=await fetch(ANT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:max,messages:[{role:'user',content:prompt}]})});
+  const d=await r.json();
+  if(d.error)throw new Error(d.error.message||JSON.stringify(d.error));
+  return d.content.map(c=>c.text||'').join('');
+}
+
+async function apiFetch(path,params={}){
+  params.access_token=TOKEN;
+  const q=Object.entries(params).map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join('&');
+  const r=await fetch(`${GRAPH}${path}?${q}`);
+  const d=await r.json();
+  if(d.error)throw new Error(d.error.message);
+  return d;
+}
+async function apiPost(path,params={},body={}){
+  params.access_token=TOKEN;
+  const q=Object.entries(params).map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join('&');
+  const f=new URLSearchParams();
+  Object.entries(body).forEach(([k,v])=>f.append(k,String(v)));
+  const r=await fetch(`${GRAPH}${path}?${q}`,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:f.toString()});
+  const d=await r.json();
+  if(d.error)throw new Error(d.error.message);
+  return d;
+}
+
+// ─── HASH ───
+async function hashContent(text){
+  const enc=new TextEncoder();
+  const buf=await crypto.subtle.digest('SHA-256',enc.encode(text.trim().toLowerCase().replace(/\s+/g,' ')));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('').substring(0,16);
+}
+async function isDuplicate(caption){
+  const h=await hashContent(caption);
+  return{isDup:hashSet.has(h),hash:h};
+}
+
+// ─── CONNECT ───
+function connect(){
+  TOKEN=document.getElementById('ti').value.trim();
+  if(!TOKEN){alert('Insira o token.');return;}
+  document.getElementById('cdot').className='dot a';
+  document.getElementById('ctxt').textContent='Conectando...';
+  document.getElementById('csp').style.display='inline-block';
+  window.META_TOKEN=TOKEN;
+
+  fetch(`https://graph.facebook.com/v19.0/me?fields=name&access_token=${TOKEN}`)
+  .then(r=>r.json())
+  .then(me=>{
+    if(me.error)throw new Error(me.error.message);
+    // Carregar ad accounts
+    return fetch(`https://graph.facebook.com/v19.0/me/adaccounts?fields=id,name,currency,amount_spent&limit=50&access_token=${TOKEN}`)
+    .then(r=>r.json())
+    .then(accs=>{
+      ACCS=(accs.data||[]);
+      // Carregar páginas
+      return fetch(`https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token,instagram_business_account&limit=50&access_token=${TOKEN}`)
+      .then(r=>r.json())
+      .then(pgs=>{
+        PAGES=(pgs.data||[]);
+        // Encontrar Instagram
+        const igPage=PAGES.find(p=>p.instagram_business_account);
+        const igReq=igPage
+          ? fetch(`https://graph.facebook.com/v19.0/${igPage.instagram_business_account.id}?fields=id,username,followers_count,media_count&access_token=${TOKEN}`).then(r=>r.json())
+          : Promise.resolve(null);
+        return igReq.then(ig=>{
+          if(ig&&!ig.error){
+            IGID=ig.id;
+            document.getElementById('d-seg').textContent=fmtN(ig.followers_count);
+            document.getElementById('ig-seg')&&(document.getElementById('ig-seg').textContent=fmtN(ig.followers_count));
+          }
+          populateSelects();
+          document.getElementById('cdot').className='dot g';
+          document.getElementById('ctxt').textContent=me.name+(IGID?' · IG ✓':' · IG não encontrado');
+          document.getElementById('csp').style.display='none';
+          log('Conectado: '+me.name+(IGID?' | IG: @'+(ig&&ig.username||IGID):''),'lok');
+          initBank();
+          if(ACCS.length)loadDashboard(ACCS[0].id);
+        });
+      });
+    });
+  })
+  .catch(e=>{
+    document.getElementById('cdot').className='dot r';
+    document.getElementById('ctxt').textContent='Erro: '+e.message;
+    document.getElementById('csp').style.display='none';
+    log('Erro conexão: '+e.message,'ler');
+    alert('Erro: '+e.message);
+  });
+}
+
+function loadPages(){
+  fetch(`https://graph.facebook.com/v19.0/me/accounts?access_token=${TOKEN}`)
+  .then(r=>r.json())
+  .then(data=>{
+    if(data.error)throw new Error(data.error.message);
+    PAGES=data.data||[];
+    populateSelects();
+    if(PAGES.length)loadInstagram(PAGES[0].id);
+  })
+  .catch(e=>log('Páginas: '+e.message,'ler'));
+}
+
+function loadInstagram(pageId){
+  fetch(`https://graph.facebook.com/v19.0/${pageId}?fields=instagram_business_account&access_token=${TOKEN}`)
+  .then(r=>r.json())
+  .then(data=>{
+    if(data.instagram_business_account){
+      IGID=data.instagram_business_account.id;
+      log('IG encontrado: '+IGID,'lok');
+    }
+  })
+  .catch(e=>log('IG: '+e.message,'ler'));
+}
+
+
+function populateSelects(){
+  ['fa','ma','fat-acc','la-acc','wa-acc'].forEach(id=>{
+    const s=document.getElementById(id);if(!s)return;
+    s.innerHTML='<option value="">Selecione...</option>';
+    ACCS.forEach(a=>{s.appendChild(new Option(a.name,a.id));});
+  });
+  ['fp2','wa-page'].forEach(id=>{
+    const s=document.getElementById(id);if(!s)return;
+    s.innerHTML='<option value="">Selecione...</option>';
+    PAGES.forEach(p=>{s.appendChild(new Option(p.name,p.id+'|'+(p.access_token||'')));});
+  });
+}
+
+// ─── DASHBOARD ───
+async function loadDashboard(accId){
+  try{
+    const ins=await apiFetch('/'+accId+'/insights',{fields:'impressions,clicks,spend,ctr,cpm,cpc',date_preset:'last_30d'});
+    const d=(ins.data&&ins.data[0])||{};
+    const imp=parseInt(d.impressions||0),clk=parseInt(d.clicks||0),spend=parseFloat(d.spend||0),leads=Math.round(clk*.08);
+    document.getElementById('d-spend').textContent='R$'+fmt(spend);
+    document.getElementById('d-imp').textContent=fmtN(imp);
+    document.getElementById('d-clk').textContent=fmtN(clk);
+    document.getElementById('d-cpl').textContent='R$'+fmt(leads?spend/leads:0);
+    document.getElementById('fn1').textContent=fmtN(imp);
+    document.getElementById('fn2').textContent=fmtN(clk);
+    document.getElementById('fn3').textContent=fmtN(leads);
+    document.getElementById('fn4').textContent=imp?(leads/imp*100).toFixed(2)+'%':'—';
+  }catch(e){log('Dashboard: '+e.message,'ler');}
+}
+
+function updateStats(){
+  const total=postBank.length;
+  const approved=postBank.filter(p=>['approved','published','winner'].includes(p.status)).length;
+  const scored=postBank.filter(p=>p.score!==null).length;
+  const avgSc=scored?Math.round(postBank.filter(p=>p.score!==null).reduce((a,p)=>a+p.score,0)/scored):null;
+  document.getElementById('nb-banco').textContent=total;
+  document.getElementById('nb-dup').textContent=dupCount;
+  document.getElementById('d-banco').textContent=total;
+  document.getElementById('d-score').textContent=avgSc!==null?avgSc+'/10':'—';
+  document.getElementById('d-leads').textContent=leads.length;
+  document.getElementById('dd-t').textContent=total;
+  document.getElementById('dd-d').textContent=dupCount;
+  document.getElementById('dd-u').textContent=hashSet.size;
+  document.getElementById('banco-count').textContent=total+' posts';
+  document.getElementById('crm-total').textContent=leads.length+' leads';
+  document.getElementById('sc-t').textContent=scored;
+  document.getElementById('sc-a').textContent=approved;
+  document.getElementById('sc-r').textContent=postBank.filter(p=>p.score!==null&&p.score<8).length;
+}
+
+// ─── INIT BANK ───
+const BASE=[
+  {title:'Você paga imposto a mais e não sabe',pillar:'auto',caption:'Empresário, vou te dizer o que poucos têm coragem de falar: a maioria das empresas brasileiras paga muito mais imposto do que deveria.\n\nNão é ilegalidade. É falta de planejamento tributário.\n\n26 anos de experiência. Resultado mensurável desde o primeiro mês.\n\n#PlanejamentoTributário #TomKnauf #InteligênciaTributária #Tributação #ImpostoMenor'},
+  {title:'Simples Nacional: quando vale a pena',pillar:'edu',caption:'O Simples não é simples para todo mundo.\n\n3 fatores: Faturamento, Margem de lucro, Folha de pagamento.\n\nMudar de regime na hora certa economiza dezenas de milhares por ano.\n\n#SimplesNacional #TomKnauf #PlanejamentoTributário'},
+  {title:'Fator R: o cálculo que define seu imposto',pillar:'edu',caption:'Folha ÷ Faturamento ≥ 28% → Anexo III (alíquota menor)\nFolha ÷ Faturamento < 28% → Anexo V (alíquota maior)\n\nDiferença de até 10% sobre o faturamento.\n\n#FatorR #SimplesNacional #TomKnauf'},
+  {title:'Reforma Tributária 2026: prepare agora',pillar:'reforma',caption:'IBS substitui ICMS e ISS.\nCBS substitui PIS e COFINS.\n\nEmpresas de serviços podem ter aumento de carga. O planejamento começa agora.\n\n#ReformaTributária #IBS #CBS #TomKnauf'},
+  {title:'Mentoria Tom Knauf: 26 anos em 4 sessões',pillar:'mentor',caption:'R$1.200/mês. 4 sessões 1:1.\n\nO que você aprende:\n→ Planejamento tributário do seu negócio\n→ Redução legal de impostos\n→ Preparação para Reforma Tributária\n\nVagas limitadas. WhatsApp agora.\n\n#MentoriaTributária #TomKnauf'},
+];
+
+async function initBank(){
+  if(!postBank.length){
+    for(const p of BASE){
+      const h=await hashContent(p.caption);
+      hashSet.add(h);
+      postBank.push({id:'base-'+Math.random().toString(36).substr(2,6),title:p.title,pillar:p.pillar,caption:p.caption,slides:['','','',''],status:'pending',score:null,scoreDetails:null,hash:h,createdAt:Date.now()});
+    }
+  }
+  updateStats();
+}
+
+// ─── AVATAR ───
+function addTag(inputId,containerId){
+  const input=document.getElementById(inputId);
+  const val=input.value.trim();if(!val)return;
+  const cont=document.getElementById(containerId);
+  const span=document.createElement('span');
+  span.className='tag';
+  span.innerHTML=val+' <span class="x" onclick="this.parentElement.remove()">✕</span>';
+  cont.appendChild(span);input.value='';
+}
+function getTags(id){return[...document.getElementById(id).querySelectorAll('.tag')].map(t=>t.textContent.replace('✕','').trim());}
+
+async function gerarAvatarIA(){
+  document.getElementById('btn-av').disabled=true;
+  document.getElementById('av-sp').style.display='inline-block';
+  try{
+    const nicho=document.getElementById('av-nicho').value||'empresário de serviços';
+    const txt=await aiCall(`Tom Knauf tributarista 26 anos.\n\nCrie avatar do cliente ideal para consultoria tributária focado em: ${nicho}\n\nJSON sem markdown: {"nicho":"...","cargo":"...","dores":["..."],"desejos":["..."],"objecoes":["..."]}`,800);
+    const r=JSON.parse(txt.replace(/```json|```/g,'').trim());
+    document.getElementById('av-nicho').value=r.nicho||nicho;
+    ['dores','desejos','objecoes'].forEach(f=>{
+      const cont=document.getElementById(f+'-tags');cont.innerHTML='';
+      (r[f]||[]).forEach(item=>{const s=document.createElement('span');s.className='tag';s.innerHTML=item+' <span class="x" onclick="this.parentElement.remove()">✕</span>';cont.appendChild(s);});
+    });
+    document.getElementById('av-ok').style.display='block';
+    document.getElementById('av-ok').textContent='✓ Avatar gerado. Revise e salve.';
+  }catch(e){log('Avatar: '+e.message,'ler');}
+  document.getElementById('btn-av').disabled=false;
+  document.getElementById('av-sp').style.display='none';
+}
+
+function salvarAvatar(){
+  avatar={nicho:document.getElementById('av-nicho').value,cargo:document.getElementById('av-cargo').value,dores:getTags('dores-tags'),desejos:getTags('desejos-tags'),objecoes:getTags('objecoes-tags')};
+  document.getElementById('av-ok').style.display='block';
+  document.getElementById('av-ok').textContent='✓ Avatar salvo.';
+  document.getElementById('avatar-bar').textContent='Avatar: '+avatar.nicho.substring(0,30);
+  log('Avatar salvo','lok');
+}
+
+function avatarCtx(){
+  return`AVATAR: Nicho: ${avatar.nicho}. Cargo: ${avatar.cargo}. Dores: ${avatar.dores.join(', ')||'padrão'}. Desejos: ${avatar.desejos.join(', ')||'padrão'}. Objeções: ${avatar.objecoes.join(', ')||'padrão'}.`;
+}
+
+// ─── DEDUP ───
+async function checkDedup(){
+  const text=document.getElementById('dd-check').value.trim();if(!text)return;
+  const{isDup,hash}=await isDuplicate(text);
+  document.getElementById('dd-result').innerHTML=isDup?`<div class="mer">⊘ DUPLICATA — Hash: ${hash}</div>`:`<div class="mok">✓ Único — Hash: ${hash}</div>`;
+}
+
+// ─── SCORING ───
+async function scorePost(post){
+  const txt=await aiCall(`Avalie post Instagram Tom Knauf de 0-10:\nTÍTULO: ${post.title}\nLEGENDA: ${post.caption.substring(0,250)}\n\nJSON sem markdown: {"engajamento":N,"clareza":N,"venda":N,"viral":N,"total":N,"aprovado":true/false,"justificativa":"max 60 chars"}`,300);
+  return JSON.parse(txt.replace(/```json|```/g,'').trim());
+}
+
+async function scoreAll(){
+  const pending=postBank.filter(p=>p.score===null&&p.status==='pending');
+  if(!pending.length){alert('Nenhum post pendente.');return;}
+  document.getElementById('bsa').disabled=true;
+  document.getElementById('sasp').style.display='inline-block';
+  for(const post of pending){
+    try{const sc=await scorePost(post);post.score=sc.total;post.scoreDetails=sc;post.status=sc.total>=8?'approved':'scored';await sleep(400);}
+    catch(e){log('Score: '+e.message,'ler');}
+  }
+  updateStats();renderScoring();renderBanco();populateABSelect();
+  document.getElementById('bsa').disabled=false;
+  document.getElementById('sasp').style.display='none';
+  log('Scoring concluído','lok');
+}
+
+function renderScoring(){
+  const list=document.getElementById('scoring-list');
+  const scored=postBank.filter(p=>p.score!==null).sort((a,b)=>b.score-a.score);
+  if(!scored.length){list.innerHTML='<div style="font-size:12px;color:var(--text-3);">Nenhum post pontuado ainda.</div>';return;}
+  list.innerHTML=scored.map(p=>{
+    const rc=p.score>=8?'sh':p.score>=6?'sm':'sl';
+    const sd=p.scoreDetails||{};
+    return`<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);">
+      <div class="sr ${rc}">${p.score}</div>
+      <div style="flex:1;"><div style="font-size:12px;font-weight:600;">${p.title}</div>
+      <div style="font-size:10px;color:var(--text-3);margin-top:1px;">Eng:${sd.engajamento||'?'} · Clareza:${sd.clareza||'?'} · Venda:${sd.venda||'?'} · Viral:${sd.viral||'?'}${sd.justificativa?' — '+sd.justificativa:''}</div></div>
+      <span class="badge ${['approved','winner','published'].includes(p.status)?'bok':p.score>=8?'bok':'berr'}">${['approved','winner','published'].includes(p.status)?'APROVADO':'REPROVADO'}</span>
+    </div>`;
+  }).join('');
+}
+
+// ─── A/B ───
+function populateABSelect(){
+  const s=document.getElementById('ab-post');
+  s.innerHTML='<option value="">Selecione...</option>';
+  postBank.filter(p=>['approved','winner'].includes(p.status)).forEach(p=>{s.appendChild(new Option(p.title.substring(0,50),p.id));});
+}
+
+async function criarAB(){
+  const pid=document.getElementById('ab-post').value;if(!pid){alert('Selecione um post.');return;}
+  const post=postBank.find(p=>p.id===pid);if(!post)return;
+  document.getElementById('btn-ab').disabled=true;
+  document.getElementById('ab-sp').style.display='inline-block';
+  try{
+    const txt=await aiCall(`Tom Knauf tributarista. Versão B para A/B:\nTÍTULO: ${post.title}\nLEGENDA: ${post.caption.substring(0,300)}\n\nGancho DIFERENTE, estrutura diferente. JSON: {"titulo":"...","caption":"..."}`,1200);
+    const v=JSON.parse(txt.replace(/```json|```/g,'').trim());
+    const h=await hashContent(v.caption);
+    if(!hashSet.has(h)){hashSet.add(h);const vb={id:'ab-'+Date.now(),title:v.titulo,pillar:post.pillar,caption:v.caption,slides:['','','',''],status:'ab-variant',score:null,hash:h,createdAt:Date.now(),abParentId:post.id};postBank.push(vb);abTests.push({id:'ab-'+Date.now(),postId:post.id,variantId:vb.id,title:post.title,status:'running',createdAt:Date.now()});}
+    renderAB();log('A/B criado: '+post.title.substring(0,40),'lok');
+  }catch(e){log('A/B: '+e.message,'ler');}
+  document.getElementById('btn-ab').disabled=false;
+  document.getElementById('ab-sp').style.display='none';
+}
+
+function renderAB(){
+  const list=document.getElementById('ab-list');
+  if(!abTests.length){list.innerHTML='<div style="font-size:12px;color:var(--text-3);">Nenhum teste criado.</div>';return;}
+  list.innerHTML=abTests.map((t,i)=>{
+    const pA=postBank.find(p=>p.id===t.postId);
+    const pB=postBank.find(p=>p.id===t.variantId);
+    return`<div class="card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <span class="badge binfo">A/B</span><span style="flex:1;font-size:13px;font-weight:600;">${t.title.substring(0,50)}</span>
+        <span class="badge ${t.status==='running'?'bgold':t.status==='winner-a'?'bok':'bpu2'}">${t.status==='running'?'RUNNING':t.status==='winner-a'?'A VENCE':'B VENCE'}</span>
+      </div>
+      <div class="g2">
+        <div style="padding:10px;background:var(--surface2);border-radius:8px;"><div style="font-size:10px;color:var(--text-3);margin-bottom:4px;">VERSÃO A — ORIGINAL</div><div style="font-size:12px;font-weight:600;">${pA?pA.title.substring(0,40):'—'}</div></div>
+        <div style="padding:10px;background:var(--surface2);border-radius:8px;"><div style="font-size:10px;color:var(--text-3);margin-bottom:4px;">VERSÃO B — VARIANTE</div><div style="font-size:12px;font-weight:600;">${pB?pB.title.substring(0,40):'—'}</div></div>
+      </div>
+      ${t.status==='running'?`<div style="display:flex;gap:6px;margin-top:8px;">
+        <button class="btn bsm" onclick="declararAB(${i},'a')">Declarar A vencedor</button>
+        <button class="btn bsm bpu" onclick="declararAB(${i},'b')">Declarar B vencedor</button>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function declararAB(i,v){
+  const t=abTests[i];t.status='winner-'+v;
+  const wid=v==='a'?t.postId:t.variantId;
+  const w=postBank.find(p=>p.id===wid);if(w)w.status='winner';
+  renderAB();renderWinners();log('A/B vencedor: versão '+v.toUpperCase(),'lok');
+}
+
+// ─── BANCO ───
+function renderBanco(){
+  const filt=document.getElementById('bfilt').value;
+  const srt=document.getElementById('bsort').value;
+  let posts=[...postBank];
+  if(filt)posts=posts.filter(p=>p.status===filt||(filt==='approved'&&['approved','winner'].includes(p.status)));
+  posts.sort((a,b)=>srt==='score'?(b.score||0)-(a.score||0):b.createdAt-a.createdAt);
+  const list=document.getElementById('banco-list');
+  if(!posts.length){list.innerHTML='<div style="font-size:12px;color:var(--text-3);">Nenhum post encontrado.</div>';return;}
+  list.innerHTML='';
+  posts.forEach(post=>{
+    const i=postBank.indexOf(post);
+    const rc=post.score>=8?'sh':post.score>=6?'sm':post.score!==null?'sl':'sn';
+    const sc=post.score!==null?post.score:'?';
+    const sMap={pending:'bgray',scored:'bwarn',approved:'bok',published:'binfo','ab-variant':'bpu2',winner:'bok'};
+    const sLbl={pending:'Pendente',scored:'Pontuado',approved:'Aprovado',published:'Publicado','ab-variant':'A/B',winner:'Vencedor'};
+    const div=document.createElement('div');div.className='card';div.style.padding='12px';div.style.marginBottom='8px';
+    div.innerHTML=`<div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="toggleDetail('pd-${i}')">
+      <div class="sr ${rc}" style="width:28px;height:28px;font-size:10px;">${sc}</div>
+      <span class="badge bpu2" style="font-size:9px;">${PL[post.pillar]||post.pillar}</span>
+      <span style="flex:1;font-size:12px;font-weight:600;">${post.title}</span>
+      <span class="hash-tag">${post.hash?post.hash.substring(0,8)+'…':''}</span>
+      <span class="badge ${sMap[post.status]||'bgray'}">${sLbl[post.status]||post.status}</span>
+    </div>
+    <div id="pd-${i}" style="display:none;padding-top:12px;border-top:1px solid var(--border);margin-top:10px;">
+      <div style="margin-bottom:10px;">
+        <label>URLs slides (1-4)</label>
+        ${[0,1,2,3].map(s=>`<input type="text" placeholder="Slide ${s+1} — URL direta" value="${post.slides[s]||''}" onchange="postBank[${i}].slides[${s}]=this.value" style="margin-bottom:4px;"/>`).join('')}
+      </div>
+      <div class="field"><label>Legenda</label><textarea rows="4" onchange="postBank[${i}].caption=this.value">${post.caption}</textarea></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+        ${post.score===null?`<button class="btn bsm bpu" onclick="scoreSingle(${i})">◉ Pontuar</button>`:''}
+        ${['approved','winner'].includes(post.status)?`<button class="btn bsm bg-btn" onclick="publicarPost(${i})">▲ Publicar</button>`:''}
+        ${post.score>=9?`<button class="btn bsm" onclick="markWinner(${i})" style="border-color:var(--green);color:var(--green);">★ Vencedor</button>`:''}
+        <button class="btn bsm" onclick="postBank[${i}].status='pending';postBank[${i}].score=null;renderBanco()">↺</button>
+        <button class="btn bsm" style="color:var(--red);border-color:var(--red);" onclick="postBank.splice(${i},1);renderBanco()">✕</button>
+      </div>
+    </div>`;
+    list.appendChild(div);
+  });
+}
+
+function toggleDetail(id){const el=document.getElementById(id);if(el)el.style.display=el.style.display==='none'?'block':'none';}
+async function scoreSingle(i){
+  try{const sc=await scorePost(postBank[i]);postBank[i].score=sc.total;postBank[i].scoreDetails=sc;postBank[i].status=sc.total>=8?'approved':'scored';updateStats();renderBanco();renderScoring();}
+  catch(e){log('Score: '+e.message,'ler');}
+}
+function markWinner(i){postBank[i].status='winner';updateStats();renderBanco();renderWinners();}
+
+// ─── GERAR ───
+async function gerarLote(){
+  const chips=[...document.querySelectorAll('#gen-chips .chip.on')].map(c=>c.dataset.p);
+  if(!chips.length){alert('Selecione ao menos um pilar.');return;}
+  const qty=parseInt(document.getElementById('gq').value);
+  const tom=document.getElementById('gt').value;
+  const autoScore=document.getElementById('gas').value==='1';
+  document.getElementById('btn-gen').disabled=true;
+  document.getElementById('gen-sp').style.display='inline-block';
+  document.getElementById('gen-txt').textContent='Gerando...';
+  const pn={auto:'Autoridade Tributária',alert:'Alertas Fiscais',edu:'Educação Tributária',reforma:'Reforma Tributária',cont:'Contabilidade',mentor:'Mentoria'};
+  const td={autoridade:'Direto e técnico.',educativo:'Didático com exemplos.',alerta:'Urgência real baseada em lei.'};
+  const existing=postBank.map(p=>p.title).join('\n');
+  try{
+    const txt=await aiCall(`Tom Knauf tributarista 26 anos.\n\n${avatarCtx()}\n\nGere ${qty} carrosséis Instagram. Pilares: ${chips.map(p=>pn[p]).join(', ')}. Tom: ${td[tom]}\n\nNão repetir:\n${existing}\n\nRegras: gancho forte, CTA direto, 10-12 hashtags PT, título máx 60 chars.\n\nJSON sem markdown: [{"title":"...","pillar":"auto|alert|edu|reforma|cont|mentor","caption":"..."}]`,6000);
+    const posts=JSON.parse(txt.replace(/```json|```/g,'').trim());
+    let added=0,dups=0;
+    for(const p of posts){
+      const{isDup,hash}=await isDuplicate(p.caption);
+      if(isDup){dups++;dupCount++;continue;}
+      hashSet.add(hash);
+      postBank.push({id:'ai-'+Date.now()+'-'+Math.random().toString(36).substr(2,4),title:p.title,pillar:p.pillar,caption:p.caption,slides:['','','',''],status:'pending',score:null,scoreDetails:null,hash,createdAt:Date.now()});
+      added++;
+    }
+    updateStats();
+    document.getElementById('gen-result').innerHTML=`<div class="mok">✓ ${added} posts únicos${dups?' · '+dups+' dups bloqueadas':''}. ${autoScore?'Iniciando scoring...':''}</div>`;
+    log(added+' posts gerados'+(dups?' ('+dups+' dups)':''),'lok');
+    if(autoScore){await sleep(300);await scoreAll();}
+  }catch(e){document.getElementById('gen-result').innerHTML=`<div class="mer">Erro: ${e.message}</div>`;log('Geração: '+e.message,'ler');}
+  document.getElementById('btn-gen').disabled=false;
+  document.getElementById('gen-sp').style.display='none';
+  document.getElementById('gen-txt').textContent='';
+}
+
+// ─── PUBLICAR ───
+function renderPubPreview(){
+  const qty=parseInt(document.getElementById('pq').value)||1;
+  const pillar=document.getElementById('pp').value;
+  const approved=postBank.filter(p=>['approved','winner'].includes(p.status)&&(!pillar||p.pillar===pillar)).slice(0,qty);
+  const div=document.getElementById('pu-prev');
+  div.innerHTML=approved.map(p=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);">
+    <div class="sr ${p.score>=8?'sh':'sm'}" style="width:24px;height:24px;font-size:10px;">${p.score||'?'}</div>
+    <span style="flex:1;font-size:12px;">${p.title}</span>
+    <span style="font-size:10px;color:${p.slides.filter(s=>s.startsWith('http')).length>=2?'var(--green)':'var(--red)'};">${p.slides.filter(s=>s.startsWith('http')).length} slides</span>
+  </div>`).join('');
+}
+
+async function publicarPost(i){
+  if(!IGID){alert('Conecte o Instagram.');return;}
+  const post=postBank[i];
+  const slides=post.slides.filter(s=>s.startsWith('http'));
+  if(slides.length<2){alert('Adicione ao menos 2 URLs.');return;}
+  go('pg-log');
+  log('Publicando: '+post.title,'lin');
+  try{
+    const ids=[];
+    for(let s=0;s<slides.length;s++){const r=await apiPost('/'+IGID+'/media',{},{image_url:slides[s],is_carousel_item:'true'});ids.push(r.id);await sleep(800);}
+    const car=await apiPost('/'+IGID+'/media',{},{media_type:'CAROUSEL',children:ids.join(','),caption:post.caption});
+    await sleep(1500);
+    const pub=await apiPost('/'+IGID+'/media_publish',{},{creation_id:car.id});
+    log('✓ Publicado: '+pub.id,'lok');post.status='published';updateStats();
+  }catch(e){log('✗ '+e.message,'ler');}
+}
+
+async function publicar(){
+  if(!IGID){document.getElementById('pu-err').style.display='block';document.getElementById('pu-err').textContent='Conecte o Instagram.';return;}
+  const qty=parseInt(document.getElementById('pq').value)||1;
+  const pillar=document.getElementById('pp').value;
+  const posts=postBank.filter(p=>['approved','winner'].includes(p.status)&&(!pillar||p.pillar===pillar)).slice(0,qty);
+  if(!posts.length){document.getElementById('pu-err').style.display='block';document.getElementById('pu-err').textContent='Nenhum post aprovado.';return;}
+  document.getElementById('bpub').disabled=true;document.getElementById('pusp').style.display='inline-block';
+  go('pg-log');let ok=0;
+  for(const post of posts){
+    const slides=post.slides.filter(s=>s.startsWith('http'));
+    if(slides.length<2)continue;
+    log('→ '+post.title.substring(0,40),'lin');
+    try{
+      const ids=[];
+      for(let s=0;s<slides.length;s++){const r=await apiPost('/'+IGID+'/media',{},{image_url:slides[s],is_carousel_item:'true'});ids.push(r.id);await sleep(800);}
+      const car=await apiPost('/'+IGID+'/media',{},{media_type:'CAROUSEL',children:ids.join(','),caption:post.caption});
+      await sleep(1500);
+      const pub=await apiPost('/'+IGID+'/media_publish',{},{creation_id:car.id});
+      log('✓ '+pub.id,'lok');post.status='published';ok++;await sleep(3000);
+    }catch(e){log('✗ '+e.message,'ler');}
+  }
+  document.getElementById('bpub').disabled=false;document.getElementById('pusp').style.display='none';
+  updateStats();
+  if(ok>0){go('pg-pub');document.getElementById('pu-ok').style.display='block';document.getElementById('pu-ok').textContent='✓ '+ok+' publicados no @tomknauf_!';}
+}
+
+// ─── FUNIL ───
+async function subirFunil(){
+  const accId=document.getElementById('fa').value;
+  const pageRaw=document.getElementById('fp2').value;
+  if(!accId||!pageRaw){document.getElementById('funil-err').style.display='block';document.getElementById('funil-err').textContent='Selecione conta e página.';return;}
+  const pageId=pageRaw.split('|')[0];
+  const url=document.getElementById('fu-url').value||'https://tomknauf.com.br';
+  const wa=document.getElementById('fu-wa').value||'5567999999999';
+  const waLink=`https://wa.me/${wa}?text=Vim+pelo+an%C3%BAncio`;
+  document.getElementById('funil-err').style.display='none';document.getElementById('funil-ok').style.display='none';
+  document.getElementById('fsp').style.display='inline-block';go('pg-log');
+  const tgt=JSON.stringify({geo_locations:{countries:['BR']},age_min:28,age_max:55,locales:[4]});
+  const defs=[
+    {n:'TK|TOPO|Reconhecimento',obj:'OUTCOME_AWARENESS',b:1000,link:url,t:'Você paga mais imposto do que deveria?',m:'26 anos reduzindo impostos de empresas brasileiras.',cta:'LEARN_MORE',bid:'fb1'},
+    {n:'TK|TOPO|Tráfego',obj:'OUTCOME_TRAFFIC',b:1500,link:url,t:'3 regimes tributários. Qual custa menos?',m:'A escolha errada custa dezenas de milhares por ano.',cta:'LEARN_MORE',bid:'fb2'},
+    {n:'TK|MEIO|Leads',obj:'OUTCOME_LEADS',b:2000,link:url,t:'Diagnóstico tributário gratuito',m:'Análise sem compromisso em até 24h.',cta:'SIGN_UP',bid:'fb3'},
+    {n:'TK|FUNDO|WhatsApp',obj:'OUTCOME_ENGAGEMENT',b:3000,link:waLink,t:'Fale agora com Tom Knauf',m:'Sem formulário. Clique e inicie a conversa.',cta:'CONTACT_US',bid:'fb4'},
+  ];
+  const oMap={OUTCOME_AWARENESS:'REACH',OUTCOME_TRAFFIC:'LINK_CLICKS',OUTCOME_LEADS:'LEAD_GENERATION',OUTCOME_ENGAGEMENT:'CONVERSATIONS'};
+  let ok=0;
+  for(const def of defs){
+    log('→ '+def.n,'lin');
+    try{
+      const c=await apiPost('/'+accId+'/campaigns',{},{name:def.n,objective:def.obj,status:'PAUSED',special_ad_categories:'[]'});
+      const as=await apiPost('/'+accId+'/adsets',{},{name:def.n+' AdSet',campaign_id:c.id,billing_event:'IMPRESSIONS',optimization_goal:oMap[def.obj],bid_strategy:'LOWEST_COST_WITHOUT_CAP',daily_budget:def.b,targeting:tgt,status:'PAUSED',start_time:new Date(Date.now()+3600000).toISOString()});
+      const cr=await apiPost('/'+accId+'/adcreatives',{},{name:def.n+' Creative',object_story_spec:JSON.stringify({page_id:pageId,link_data:{message:def.m,link:def.link,name:def.t,call_to_action:{type:def.cta,value:{link:def.link}}}})});
+      await apiPost('/'+accId+'/ads',{},{name:def.n+' Anúncio',adset_id:as.id,creative:JSON.stringify({creative_id:cr.id}),status:'PAUSED'});
+      document.getElementById(def.bid).className='badge bok';document.getElementById(def.bid).textContent='CRIADO';
+      log('✓ '+def.n,'lok');ok++;await sleep(1000);
+    }catch(e){log('✗ '+e.message,'ler');document.getElementById(def.bid).className='badge berr';document.getElementById(def.bid).textContent='ERRO';}
+  }
+  document.getElementById('fsp').style.display='none';go('pg-funil');
+  if(ok>0){document.getElementById('funil-ok').style.display='block';document.getElementById('funil-ok').textContent='✓ '+ok+' campanhas criadas (PAUSED).';}
+}
+
+// ─── MÉTRICAS ───
+async function loadMet(){
+  const accId=document.getElementById('ma').value;const period=document.getElementById('mp').value;if(!accId)return;
+  document.getElementById('msp').style.display='inline-block';
+  try{
+    const data=await apiFetch('/'+accId+'/insights',{fields:'date_start,impressions,reach,clicks,spend,ctr,cpm,cpc',date_preset:period,time_increment:1,limit:31});
+    const rows=data.data||[];
+    const t=rows.reduce((a,r)=>({imp:a.imp+parseInt(r.impressions||0),reach:a.reach+parseInt(r.reach||0),clk:a.clk+parseInt(r.clicks||0),spend:a.spend+parseFloat(r.spend||0)}),{imp:0,reach:0,clk:0,spend:0});
+    document.getElementById('met-c').innerHTML=[
+      {l:'Gasto total',v:'R$'+fmt(t.spend)},{l:'Impressões',v:fmtN(t.imp)},{l:'Alcance',v:fmtN(t.reach)},{l:'Cliques',v:fmtN(t.clk)},
+      {l:'CTR médio',v:(t.imp?(t.clk/t.imp*100).toFixed(2):0)+'%'},{l:'CPM médio',v:'R$'+fmt(t.imp?t.spend/t.imp*1000:0)},
+    ].map(c=>`<div class="mc"><div class="ml">${c.l}</div><div class="mv">${c.v}</div></div>`).join('');
+    document.getElementById('met-tb').innerHTML=rows.map(r=>`<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:8px 10px;">${r.date_start}</td><td style="padding:8px 10px;">${fmtN(r.impressions)}</td>
+      <td style="padding:8px 10px;">${fmtN(r.clicks)}</td><td style="padding:8px 10px;">${parseFloat(r.ctr||0).toFixed(2)}%</td>
+      <td style="padding:8px 10px;">R$${fmt(r.spend)}</td><td style="padding:8px 10px;">R$${fmt(r.cpm)}</td><td style="padding:8px 10px;">R$${fmt(r.cpc)}</td>
+    </tr>`).join('');
+  }catch(e){log('Métricas: '+e.message,'ler');}
+  document.getElementById('msp').style.display='none';
+}
+
+// ─── FATIGUE ───
+async function runFatigue(){
+  const accId=document.getElementById('fat-acc').value;if(!accId)return;
+  document.getElementById('fatsp').style.display='inline-block';
+  const list=document.getElementById('fat-list');list.innerHTML='';
+  try{
+    const camps=await apiFetch('/'+accId+'/campaigns',{fields:'id,name,status',limit:20});
+    for(const c of(camps.data||[]).filter(c=>c.status==='ACTIVE').slice(0,8)){
+      try{
+        const ins=await apiFetch('/'+c.id+'/insights',{fields:'cpm,ctr,frequency',date_preset:'last_7d'});
+        const d=(ins.data&&ins.data[0])||{};
+        const ctr=parseFloat(d.ctr||0),freq=parseFloat(d.frequency||0),cpm=parseFloat(d.cpm||0);
+        let level='ok',msg='Saudável';
+        if(freq>4||ctr<0.5){level='crit';msg='Criativo esgotado — substituir urgente';}
+        else if(freq>2.5||ctr<1){level='warn';msg='Sinal de fadiga inicial';}
+        const cls={ok:'fat-ok',warn:'fat-warn',crit:'fat-crit'}[level];
+        const icon={ok:'✓',warn:'⚠',crit:'🔴'}[level];
+        list.innerHTML+=`<div class="card" style="padding:12px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span class="badge ${cls}">${icon} ${level.toUpperCase()}</span>
+            <span style="flex:1;font-size:13px;font-weight:600;">${c.name.substring(0,50)}</span>
+          </div>
+          <div style="font-size:11px;color:var(--text-3);">CPM: R$${fmt(cpm)} · CTR: ${ctr.toFixed(2)}% · Freq: ${freq.toFixed(1)}x · ${msg}</div>
+          ${level!=='ok'?`<button class="btn bsm bp" style="margin-top:8px;" onclick="go('pg-vencedores')">→ Substituir por vencedor</button>`:''}
+        </div>`;
+        await sleep(200);
+      }catch(e){}
+    }
+    if(!list.innerHTML)list.innerHTML='<div style="font-size:12px;color:var(--text-3);">Nenhuma campanha ativa encontrada.</div>';
+  }catch(e){list.innerHTML=`<div class="mer">${e.message}</div>`;}
+  document.getElementById('fatsp').style.display='none';
+}
+
+// ─── LOOKALIKE ───
+async function criarCustomAudience(){
+  const accId=document.getElementById('la-acc').value;const name=document.getElementById('la-name').value;
+  if(!accId||!name){document.getElementById('la-err').style.display='block';document.getElementById('la-err').textContent='Preencha todos os campos.';return;}
+  try{
+    const r=await apiPost('/'+accId+'/customaudiences',{},{name,subtype:'CUSTOM',description:'TK — Criada automaticamente'});
+    document.getElementById('la-ok').style.display='block';document.getElementById('la-ok').textContent='✓ Custom Audience criada! ID: '+r.id;
+    document.getElementById('la-ca-id').value=r.id;log('Custom Audience: '+r.id,'lok');
+  }catch(e){document.getElementById('la-err').style.display='block';document.getElementById('la-err').textContent=e.message;}
+}
+async function criarLookalike(){
+  const accId=document.getElementById('la-acc').value;const caId=document.getElementById('la-ca-id').value;const pct=document.getElementById('la-pct').value;
+  if(!accId||!caId){document.getElementById('ll-err').style.display='block';document.getElementById('ll-err').textContent='Preencha todos os campos.';return;}
+  try{
+    const r=await apiPost('/'+accId+'/customaudiences',{},{name:'TK — Lookalike '+Math.round(parseFloat(pct)*100)+'%',subtype:'LOOKALIKE',origin_audience_id:caId,lookalike_spec:JSON.stringify({type:'similarity',ratio:parseFloat(pct),country:'BR'})});
+    document.getElementById('ll-ok').style.display='block';document.getElementById('ll-ok').textContent='✓ Lookalike criada! ID: '+r.id;log('Lookalike: '+r.id,'lok');
+  }catch(e){document.getElementById('ll-err').style.display='block';document.getElementById('ll-err').textContent=e.message;}
+}
+
+// ─── VENCEDORES → ADS ───
+function renderWinners(){
+  const winners=postBank.filter(p=>p.status==='winner'||(p.score&&p.score>=9));
+  const list=document.getElementById('win-list');
+  if(!winners.length){list.innerHTML='<div style="font-size:12px;color:var(--text-3);">Nenhum vencedor ainda.</div>';return;}
+  list.innerHTML=winners.map((p,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);">
+    <input type="checkbox" id="wc-${i}" checked style="width:auto;accent-color:var(--accent);"/>
+    <div class="sr sh" style="width:26px;height:26px;font-size:10px;">${p.score||9}</div>
+    <span style="flex:1;font-size:12px;font-weight:600;">${p.title}</span>
+    <span class="badge bpu2">${PL[p.pillar]||p.pillar}</span>
+  </div>`).join('');
+}
+
+async function criarAdsVencedores(){
+  const accId=document.getElementById('wa-acc').value;const pageRaw=document.getElementById('wa-page').value;
+  if(!accId||!pageRaw){document.getElementById('wa-err').style.display='block';document.getElementById('wa-err').textContent='Selecione conta e página.';return;}
+  const pageId=pageRaw.split('|')[0];const budget=document.getElementById('wa-bud').value;const obj=document.getElementById('wa-obj').value;
+  const winners=postBank.filter(p=>p.status==='winner'||(p.score&&p.score>=9));
+  const selected=winners.filter((_,i)=>{const cb=document.getElementById('wc-'+i);return cb&&cb.checked;});
+  if(!selected.length){document.getElementById('wa-err').style.display='block';document.getElementById('wa-err').textContent='Nenhum selecionado.';return;}
+  document.getElementById('wa-err').style.display='none';document.getElementById('wa-ok').style.display='none';
+  go('pg-log');
+  const url=document.getElementById('fu-url').value||'https://tomknauf.com.br';
+  const tgt=JSON.stringify({geo_locations:{countries:['BR']},age_min:28,age_max:55,locales:[4]});
+  const oMap={OUTCOME_LEADS:'LEAD_GENERATION',OUTCOME_TRAFFIC:'LINK_CLICKS'};
+  let ok=0;
+  for(const post of selected){
+    try{
+      const c=await apiPost('/'+accId+'/campaigns',{},{name:'TK|WIN|'+post.title.substring(0,35),objective:obj,status:'PAUSED',special_ad_categories:'[]'});
+      const as=await apiPost('/'+accId+'/adsets',{},{name:post.title.substring(0,35)+' AdSet',campaign_id:c.id,billing_event:'IMPRESSIONS',optimization_goal:oMap[obj]||'LINK_CLICKS',bid_strategy:'LOWEST_COST_WITHOUT_CAP',daily_budget:budget,targeting:tgt,status:'PAUSED',start_time:new Date(Date.now()+3600000).toISOString()});
+      const cr=await apiPost('/'+accId+'/adcreatives',{},{name:post.title.substring(0,35)+' Creative',object_story_spec:JSON.stringify({page_id:pageId,link_data:{message:post.caption.substring(0,600),link:url,name:post.title,call_to_action:{type:'LEARN_MORE',value:{link:url}}}})});
+      await apiPost('/'+accId+'/ads',{},{name:post.title.substring(0,35)+' Anúncio',adset_id:as.id,creative:JSON.stringify({creative_id:cr.id}),status:'PAUSED'});
+      log('✓ Ad criado','lok');ok++;await sleep(1200);
+    }catch(e){log('✗ '+e.message,'ler');}
+  }
+  go('pg-vencedores');
+  if(ok>0){document.getElementById('wa-ok').style.display='block';document.getElementById('wa-ok').textContent='✓ '+ok+' ads criados (PAUSED).';}
+}
+
+// ─── DM AUTORESPONDER COMPLETO ───
+let iaAtiva=true;
+let dmLeads=[];
+let dmEscalados=[];
+let dmStats={resp:0,leads:0,hot:0,esc:0,wa:0,com:0};
+
+function toggleIASw(){
+  iaAtiva=!iaAtiva;
+  const sw=document.getElementById('ia-sw');
+  const dot=document.getElementById('ia-sw-dot');
+  sw.style.background=iaAtiva?'var(--accent)':'var(--border)';
+  dot.style.left=iaAtiva?'16px':'2px';
+  log('IA DM '+(iaAtiva?'ativada':'desativada'),iaAtiva?'lok':'');
+}
+
+function switchDMTab(tab){
+  ['inbox','esc','com','cfg','hist'].forEach(t=>{
+    const el=document.getElementById('dmtab-'+t);
+    const btn=document.getElementById('dmt-'+t);
+    if(el)el.style.display=t===tab?'block':'none';
+    if(btn){btn.style.color=t===tab?'var(--accent)':'var(--text-3)';btn.style.borderBottom=t===tab?'2px solid var(--accent)':'2px solid transparent';}
+  });
+  if(tab==='hist')renderDMLeads();
+  if(tab==='esc')renderEscalados();
+}
+
+function updateDMStats(){
+  document.getElementById('dm-stat-resp').textContent=dmStats.resp;
+  document.getElementById('dm-stat-leads').textContent=dmStats.leads;
+  document.getElementById('dm-stat-hot').textContent=dmStats.hot;
+  document.getElementById('dm-stat-esc').textContent=dmStats.esc;
+  document.getElementById('dm-stat-wa').textContent=dmStats.wa;
+  document.getElementById('dm-stat-com').textContent=dmStats.com;
+  document.getElementById('dm-esc-count').textContent=dmEscalados.length;
+  document.getElementById('dm-leads-count').textContent=dmLeads.length+' leads';
+}
+
+function resetDM(){
+  dmHistory=[];
+  document.getElementById('dm-msgs').innerHTML='';
+  document.getElementById('dm-intent-bar').style.display='none';
+  addDMMsg('ai',document.getElementById('dm-intro').value);
+}
+function simDM(txt){document.getElementById('dm-input').value=txt;enviarDM();}
+
+async function enviarDM(){
+  if(!iaAtiva){addDMMsg('system','IA desativada. Ative o toggle para responder automaticamente.');return;}
+  const input=document.getElementById('dm-input');const txt=input.value.trim();if(!txt)return;input.value='';
+  addDMMsg('user',txt);dmHistory.push({role:'user',text:txt});
+  const kw=['imposto','tribut','simples','lucro','fator r','regime','cnpj','mei','contabil','fiscal','reforma','iss','icms','reduzir','economizar','mentoria','consultoria','planeja','quanto custa','quanto cobr','como funciona','quero saber','me ajud','ajuda','duvida','dúvida'];
+  const isRel=kw.some(k=>txt.toLowerCase().includes(k));
+  if(!isRel){
+    const off='Olá! Para dúvidas sobre planejamento tributário e consultoria contábil, estou à disposição. 😊';
+    addDMMsg('ai',off);return;
+  }
+  const hist=dmHistory.slice(-8).map(m=>`${m.role==='ai'?'ASSISTENTE':'LEAD'}: ${m.text}`).join('\n');
+  const waLink=document.getElementById('dm-wa').value||'https://wa.me/5567999999999';
+  const waMsgTpl=document.getElementById('dm-wa-msg').value||'Acesse o WhatsApp: {LINK}';
+  const threshold=parseInt(document.getElementById('dm-thr').value)||70;
+  try{
+    const r=JSON.parse((await aiCall(`Assistente Tom Knauf Inteligência Tributária. 26 anos tributação.\n\n${avatarCtx()}\n\nHISTÓRICO:\n${hist}\n\nResponda ao lead de forma profissional e breve (máx 3 frases). Conduza qualificação com até 3 perguntas ao longo da conversa. Quando demonstrar interesse real, inclua link WA: ${waLink}\n\nJSON sem markdown: {"texto":"...","intentScore":0-100,"tier":"HOT|WARM|COLD","enviarWA":true/false,"qualificou":true/false}`,700)).replace(/```json|```/g,'').trim());
+    let msg=r.texto;
+    if(r.enviarWA){msg+='\n\n'+waMsgTpl.replace('{LINK}',waLink);dmStats.wa++;}
+    addDMMsg('ai',msg);dmHistory.push({role:'ai',text:msg});
+    dmStats.resp++;
+    // Atualizar intent bar
+    const intentBar=document.getElementById('dm-intent-bar');
+    intentBar.style.display='flex';
+    document.getElementById('dm-intent-fill').style.width=r.intentScore+'%';
+    document.getElementById('dm-intent-fill').style.background=r.intentScore>=70?'var(--red)':r.intentScore>=40?'var(--orange)':'var(--accent)';
+    document.getElementById('dm-intent-pct').textContent=r.intentScore+'%';
+    document.getElementById('dm-intent-pct').style.color=r.intentScore>=70?'var(--red)':r.intentScore>=40?'var(--orange)':'var(--accent)';
+    const tierBadge=document.getElementById('dm-intent-tier');
+    tierBadge.className='badge '+(r.tier==='HOT'?'berr':r.tier==='WARM'?'bwarn':'bgray');
+    tierBadge.textContent=r.tier;
+    // Registrar lead
+    const leadName='Lead da simulação';
+    if(r.qualificou||r.intentScore>=40){
+      const existing=dmLeads.find(l=>l.session===dmHistory.length);
+      if(!existing){
+        dmLeads.push({id:'dm-'+Date.now(),nome:leadName,tier:r.tier,intentScore:r.intentScore,waEnviado:r.enviarWA,createdAt:Date.now(),session:dmHistory.length});
+        dmStats.leads++;
+        if(r.tier==='HOT')dmStats.hot++;
+      }
+    }
+    // Escalar
+    if(r.intentScore>=threshold){
+      const msg2='🔴 LEAD ESCALADO — Intenção '+r.intentScore+'% ('+r.tier+') — Responda no WhatsApp agora!';
+      addDMMsg('system',msg2);
+      if(!dmEscalados.find(e=>e.score===r.intentScore&&e.createdAt>Date.now()-5000)){
+        dmEscalados.push({tier:r.tier,intentScore:r.intentScore,waLink,lastMsg:txt,createdAt:Date.now()});
+        dmStats.esc++;
+        renderEscalados();
+        document.getElementById('dm-esc-count').textContent=dmEscalados.length;
+      }
+    }
+    updateDMStats();
+  }catch(e){addDMMsg('ai','[Erro: '+e.message+']');log('DM IA: '+e.message,'ler');}
+}
+
+function addDMMsg(role,text){
+  const msgs=document.getElementById('dm-msgs');
+  const d=document.createElement('div');
+  if(role==='system'){
+    d.style.cssText='text-align:center;font-size:11px;color:var(--red);padding:6px 10px;background:#e0525215;border-radius:6px;margin:6px 0;';
+    d.textContent=text;msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return;
+  }
+  d.className='msg '+role;
+  d.innerHTML=`<div class="msg-avatar" style="background:${role==='ai'?'var(--accent-light)':'var(--surface3)'};color:${role==='ai'?'var(--accent)':'var(--text)'};">${role==='ai'?'TK':'👤'}</div>
+    <div><div style="font-size:9px;color:var(--text-3);margin-bottom:2px;">${role==='ai'?'Assistente Tom Knauf':'Lead (simulação)'}</div>
+    <div class="msg-bubble">${text.replace(/\n/g,'<br>')}</div>
+    <div style="font-size:9px;color:var(--text-3);margin-top:2px;">${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div></div>`;
+  msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;
+}
+
+function renderEscalados(){
+  const list=document.getElementById('dm-esc-list');
+  if(!dmEscalados.length){list.innerHTML='<div style="font-size:12px;color:var(--text-3);">Nenhum lead escalado ainda.</div>';return;}
+  list.innerHTML=dmEscalados.map(e=>`<div class="card" style="border-left:3px solid var(--red);padding:12px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <span class="badge berr">🔴 HOT ${e.intentScore}%</span>
+      <span style="font-size:12px;flex:1;">Escalado ${new Date(e.createdAt).toLocaleString('pt-BR')}</span>
+    </div>
+    <div style="font-size:12px;color:var(--text-3);margin-bottom:8px;">Última mensagem: "${e.lastMsg.substring(0,80)}"</div>
+    <a href="${e.waLink}" target="_blank" class="btn bp bsm">WhatsApp agora →</a>
+  </div>`).join('');
+}
+
+function renderDMLeads(){
+  const filter=document.getElementById('dm-leads-filter').value;
+  const list=filter?dmLeads.filter(l=>l.tier===filter):[...dmLeads];
+  const el=document.getElementById('dm-leads-list');
+  if(!list.length){el.innerHTML='<div style="font-size:12px;color:var(--text-3);">Nenhum lead capturado ainda.</div>';return;}
+  el.innerHTML='<div class="card" style="padding:0;overflow:hidden;"><table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="border-bottom:1px solid var(--border);"><th style="padding:8px 10px;text-align:left;font-size:10px;color:var(--text-3);text-transform:uppercase;">Nome</th><th style="padding:8px 10px;text-align:left;font-size:10px;color:var(--text-3);text-transform:uppercase;">Tier</th><th style="padding:8px 10px;text-align:left;font-size:10px;color:var(--text-3);text-transform:uppercase;">Intenção</th><th style="padding:8px 10px;text-align:left;font-size:10px;color:var(--text-3);text-transform:uppercase;">WA</th><th style="padding:8px 10px;text-align:left;font-size:10px;color:var(--text-3);text-transform:uppercase;">Data</th></tr></thead><tbody>'+
+    list.map(l=>`<tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 10px;font-weight:600;">${l.nome}</td>
+      <td style="padding:8px 10px;"><span class="badge ${l.tier==='HOT'?'berr':l.tier==='WARM'?'bwarn':'bgray'}">${l.tier}</span></td>
+      <td style="padding:8px 10px;"><div style="display:flex;align-items:center;gap:6px;"><div style="width:50px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${l.intentScore}%;background:${l.intentScore>=70?'var(--red)':l.intentScore>=40?'var(--orange)':'var(--accent)'};border-radius:2px;"></div></div><span style="font-size:11px;">${l.intentScore}%</span></div></td>
+      <td style="padding:8px 10px;">${l.waEnviado?'<span class="badge bok">✓</span>':'—'}</td>
+      <td style="padding:8px 10px;font-size:11px;color:var(--text-3);">${new Date(l.createdAt).toLocaleDateString('pt-BR')}</td>
+    </tr>`).join('')+'</tbody></table></div>';
+}
+
+function exportDMLeads(){
+  if(!dmLeads.length){alert('Nenhum lead para exportar.');return;}
+  const csv='Nome,Tier,Intenção,WA Enviado,Data\n'+dmLeads.map(l=>`${l.nome},${l.tier},${l.intentScore}%,${l.waEnviado?'Sim':'Nao'},${new Date(l.createdAt).toLocaleDateString('pt-BR')}`).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='leads-dm-tomknauf.csv';a.click();
+}
+
+async function responderComentario(){
+  const texto=document.getElementById('com-texto').value.trim();if(!texto){alert('Cole o comentário.');return;}
+  const post=document.getElementById('com-post').value;
+  document.getElementById('btn-com').disabled=true;document.getElementById('com-sp').style.display='inline-block';
+  const kw=['imposto','tribut','simples','lucro','regime','cnpj','mei','contabil','fiscal','reforma','reduzir','mentoria','consultoria'];
+  const isRel=kw.some(k=>texto.toLowerCase().includes(k));
+  try{
+    let resp;
+    if(!isRel){resp='Obrigado pela mensagem! Para dúvidas sobre planejamento tributário, fique à vontade para mandar uma DM. 😊';}
+    else{
+      const txt=await aiCall(`Tom Knauf tributarista. Responda este comentário do Instagram:\n\nCOMENTÁRIO: ${texto}\nPOST SOBRE: ${post||'tributação'}\n\nRegras: máx 2 frases, profissional, CTA para DM ou WhatsApp quando relevante. Responda apenas o texto:`,250);
+      resp=txt.trim();
+    }
+    dmStats.com++;updateDMStats();
+    document.getElementById('com-result').innerHTML=`<div style="background:var(--surface2);border-radius:8px;padding:10px;border-left:3px solid var(--accent);">
+      <div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Resposta gerada</div>
+      <div style="font-size:12px;line-height:1.5;">${resp}</div>
+      <button class="btn bsm bp" style="margin-top:8px;" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent)">Copiar resposta</button>
+    </div>`;
+    log('Comentário respondido','lok');
+  }catch(e){document.getElementById('com-result').innerHTML=`<div class="mer">Erro: ${e.message}</div>`;}
+  document.getElementById('btn-com').disabled=false;document.getElementById('com-sp').style.display='none';
+}
+
+// ─── LEAD MAGNET ───
+async function gerarLeadMagnet(){
+  document.getElementById('btn-lm').disabled=true;document.getElementById('lm-sp').style.display='inline-block';
+  const tipo={checklist:'Checklist',ebook:'E-book mini',guia:'Guia prático',diagnostico:'Diagnóstico gratuito'}[document.getElementById('lm-tipo').value];
+  const tema=document.getElementById('lm-tema').value;
+  try{
+    const txt=await aiCall(`Tom Knauf tributarista.\n\n${avatarCtx()}\n\nCrie ${tipo} completo sobre: ${tema}\n\nObjetivo: capturar WhatsApp em troca de valor real.\n\nJSON sem markdown: {"titulo_magnetico":"...","subtitulo":"...","promessa":"...","estrutura":["..."],"conteudo_principal":"...","cta_captura":"...","post_instagram":"..."}`,2000);
+    const r=JSON.parse(txt.replace(/```json|```/g,'').trim());
+    document.getElementById('lm-output').innerHTML=`<div class="card" style="border-left:3px solid var(--purple);">
+      <div class="output-block"><div class="output-label">Título magnético</div><div class="output-text" style="font-size:16px;font-weight:600;">${r.titulo_magnetico}</div></div>
+      <div class="output-block"><div class="output-label">Subtítulo</div><div class="output-text">${r.subtitulo}</div></div>
+      <div class="output-block"><div class="output-label">Promessa</div><div class="output-text">${r.promessa}</div></div>
+      <div class="output-block"><div class="output-label">Estrutura</div><div class="output-text">${(r.estrutura||[]).map((s,i)=>`${i+1}. ${s}`).join('\n')}</div></div>
+      <div class="output-block"><div class="output-label">Conteúdo</div><div class="output-text">${r.conteudo_principal}</div></div>
+      <div class="output-block" style="border-left-color:var(--accent);"><div class="output-label">CTA de captura</div><div class="output-text" style="font-weight:600;">${r.cta_captura}</div></div>
+      <div class="output-block"><div class="output-label">Post Instagram</div><div class="output-text">${r.post_instagram}</div></div>
+    </div>`;
+    log('Lead magnet gerado','lok');
+  }catch(e){document.getElementById('lm-output').innerHTML=`<div class="mer">Erro: ${e.message}</div>`;}
+  document.getElementById('btn-lm').disabled=false;document.getElementById('lm-sp').style.display='none';
+}
+
+// ─── LANDING PAGE ───
+async function gerarLanding(){
+  document.getElementById('btn-lp').disabled=true;document.getElementById('lp-sp').style.display='inline-block';
+  const prod={mentoria:'Mentoria 1:1 Tom Knauf (R$1.200/mês)',planejamento:'Planejamento Tributário',diagnostico:'Diagnóstico Tributário Gratuito'}[document.getElementById('lp-prod').value];
+  const obj={whatsapp:'ir para WhatsApp',formulario:'preencher formulário',compra:'comprar diretamente'}[document.getElementById('lp-obj').value];
+  try{
+    const txt=await aiCall(`Tom Knauf tributarista 26 anos.\n\n${avatarCtx()}\n\nCopy completo de landing page para: ${prod}. Objetivo: ${obj}.\n\nJSON sem markdown: {"headline":"...","subheadline":"...","problema":"...","solucao":"...","beneficios":[{"titulo":"...","descricao":"..."}],"prova_social":"...","objecoes":[{"objecao":"...","resposta":"..."}],"urgencia":"...","cta_principal":"...","garantia":"..."}`,3000);
+    const r=JSON.parse(txt.replace(/```json|```/g,'').trim());
+    document.getElementById('lp-output').innerHTML=`<div class="card">
+      <div class="output-block" style="border-left-color:var(--red);"><div class="output-label">HEADLINE</div><div class="output-text" style="font-size:18px;font-weight:700;">${r.headline}</div></div>
+      <div class="output-block"><div class="output-label">Subheadline</div><div class="output-text" style="font-size:14px;">${r.subheadline}</div></div>
+      <div class="g2">
+        <div class="output-block"><div class="output-label">O problema</div><div class="output-text">${r.problema}</div></div>
+        <div class="output-block"><div class="output-label">A solução</div><div class="output-text">${r.solucao}</div></div>
+      </div>
+      <div class="output-block"><div class="output-label">Benefícios</div><div class="output-text">${(r.beneficios||[]).map(b=>`→ ${b.titulo}: ${b.descricao}`).join('\n')}</div></div>
+      <div class="output-block"><div class="output-label">Prova social</div><div class="output-text" style="font-style:italic;">"${r.prova_social}"</div></div>
+      <div class="output-block"><div class="output-label">Objeções</div><div class="output-text">${(r.objecoes||[]).map(o=>`❓ ${o.objecao}\n✓ ${o.resposta}`).join('\n\n')}</div></div>
+      <div class="output-block" style="border-left-color:var(--accent);"><div class="output-label">CTA Principal</div><div class="output-text" style="font-size:16px;font-weight:700;">${r.cta_principal}</div></div>
+      <div class="output-block"><div class="output-label">Garantia</div><div class="output-text">${r.garantia}</div></div>
+      <button class="btn bsm bp" style="margin-top:8px;" onclick="navigator.clipboard.writeText(document.getElementById('lp-output').innerText)">Copiar copy completo</button>
+    </div>`;
+    log('Landing page gerada','lok');
+  }catch(e){document.getElementById('lp-output').innerHTML=`<div class="mer">Erro: ${e.message}</div>`;}
+  document.getElementById('btn-lp').disabled=false;document.getElementById('lp-sp').style.display='none';
+}
+
+// ─── REESCRITA ───
+async function reescrever(){
+  const original=document.getElementById('ree-orig').value.trim();if(!original){alert('Cole o post original.');return;}
+  document.getElementById('btn-ree').disabled=true;document.getElementById('ree-sp').style.display='inline-block';
+  const qty=document.getElementById('ree-qty').value;const ang=document.getElementById('ree-ang').value;
+  try{
+    const txt=await aiCall(`Tom Knauf tributarista.\n\n${avatarCtx()}\n\nPOST ORIGINAL VENCEDOR:\n${original}\n\nGere ${qty} variações. Ângulo: ${ang}. Gancho completamente diferente em cada.\n\nJSON sem markdown: [{"angulo":"...","titulo":"...","caption":"..."}]`,4000);
+    const vars=JSON.parse(txt.replace(/```json|```/g,'').trim());
+    document.getElementById('ree-output').innerHTML=vars.map((v,i)=>`<div class="card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span class="badge bpu2">Variação ${i+1}</span><span class="badge binfo">${v.angulo}</span></div>
+      <div class="output-block"><div class="output-label">Título</div><div class="output-text" style="font-weight:600;">${v.titulo}</div></div>
+      <div class="output-block"><div class="output-label">Legenda</div><div class="output-text">${v.caption}</div></div>
+      <button class="btn bsm bp" style="margin-top:6px;" onclick="navigator.clipboard.writeText(this.previousElementSibling.querySelector('.output-text').textContent)">Copiar</button>
+    </div>`).join('');
+    log(vars.length+' variações geradas','lok');
+  }catch(e){document.getElementById('ree-output').innerHTML=`<div class="mer">Erro: ${e.message}</div>`;}
+  document.getElementById('btn-ree').disabled=false;document.getElementById('ree-sp').style.display='none';
+}
+
+// ─── REELS ───
+async function gerarReels(){
+  const tema=document.getElementById('rl-tema').value.trim();if(!tema){alert('Informe o tema.');return;}
+  document.getElementById('btn-rl').disabled=true;document.getElementById('rl-sp').style.display='inline-block';
+  const dur=document.getElementById('rl-dur').value;
+  const ctaMap={whatsapp:'acessar o WhatsApp (link na bio)',dm:'mandar DM',seguir:'seguir @tomknauf_',comentar:'comentar com a palavra IMPOSTO'};
+  try{
+    const txt=await aiCall(`Tom Knauf tributarista.\n\n${avatarCtx()}\n\nRoteiro de Reels: ${tema}. Duração: ${dur}s. Estilo: ${document.getElementById('rl-est').value}. CTA: ${ctaMap[document.getElementById('rl-cta').value]}\n\nJSON sem markdown: {"titulo_reels":"...","gancho_escrito":"...","cenas":[{"numero":N,"duracao_seg":N,"fala":"...","texto_tela":"...","acao":"..."}],"cta_final":"...","legenda_post":"...","hook_thumbnail":"..."}`,2500);
+    const r=JSON.parse(txt.replace(/```json|```/g,'').trim());
+    document.getElementById('rl-output').innerHTML=`<div class="card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span class="badge bpu2">🎬 Roteiro</span><span style="font-size:14px;font-weight:600;">${r.titulo_reels||tema}</span></div>
+      <div class="output-block" style="border-left-color:var(--red);"><div class="output-label">GANCHO (primeiros 3s na tela)</div><div class="output-text" style="font-size:15px;font-weight:700;">${r.gancho_escrito}</div></div>
+      <div class="output-block" style="border-left-color:var(--purple);"><div class="output-label">Thumbnail</div><div class="output-text">${r.hook_thumbnail}</div></div>
+      ${(r.cenas||[]).map(c=>`<div style="background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--border);">
+        <div style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;margin-bottom:4px;">CENA ${c.numero} — ${c.duracao_seg}s</div>
+        <div style="font-size:12px;"><strong>Fala:</strong> ${c.fala}</div>
+        ${c.texto_tela?`<div style="font-size:12px;margin-top:4px;"><strong>Tela:</strong> ${c.texto_tela}</div>`:''}
+        ${c.acao?`<div style="font-size:11px;color:var(--text-3);margin-top:3px;font-style:italic;">${c.acao}</div>`:''}
+      </div>`).join('')}
+      <div class="output-block" style="border-left-color:var(--accent);"><div class="output-label">CTA Final</div><div class="output-text" style="font-weight:600;">${r.cta_final}</div></div>
+      <div class="output-block"><div class="output-label">Legenda do post</div><div class="output-text">${r.legenda_post}</div></div>
+      <button class="btn bsm bp" style="margin-top:8px;" onclick="navigator.clipboard.writeText(document.getElementById('rl-output').innerText)">Copiar roteiro</button>
+    </div>`;
+    log('Roteiro de Reels gerado','lok');
+  }catch(e){document.getElementById('rl-output').innerHTML=`<div class="mer">Erro: ${e.message}</div>`;}
+  document.getElementById('btn-rl').disabled=false;document.getElementById('rl-sp').style.display='none';
+}
+
+// ─── CRM ───
+function showAddLead(){document.getElementById('add-lead-form').style.display='block';}
+function salvarLead(){
+  leads.push({id:'l-'+Date.now(),nome:document.getElementById('nl-nome').value,wa:document.getElementById('nl-wa').value,empresa:document.getElementById('nl-emp').value,fat:document.getElementById('nl-fat').value,origem:document.getElementById('nl-orig').value,stage:document.getElementById('nl-stage').value,obs:document.getElementById('nl-obs').value,createdAt:Date.now()});
+  document.getElementById('add-lead-form').style.display='none';
+  ['nl-nome','nl-wa','nl-emp','nl-obs'].forEach(id=>document.getElementById(id).value='');
+  updateStats();renderPipeline();log('Lead adicionado','lok');
+}
+function renderPipeline(){
+  const pipe=document.getElementById('pipeline');
+  pipe.innerHTML=STAGES.map(stage=>{
+    const sl=leads.filter(l=>l.stage===stage);
+    return`<div class="pipe-col">
+      <div class="pipe-title" style="color:${STAGE_COLORS[stage]};">${STAGE_LABELS[stage]}<span class="pipe-count">${sl.length}</span></div>
+      ${sl.map(l=>`<div class="pipe-item" onclick="moverLead('${l.id}')">
+        <div style="font-weight:600;font-size:12px;">${l.nome||'—'}</div>
+        <div style="color:var(--text-3);font-size:11px;">${l.empresa||''}</div>
+        <div style="margin-top:4px;"><span class="badge binfo" style="font-size:9px;">${l.origem}</span></div>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+  document.getElementById('crm-total').textContent=leads.length+' leads';
+}
+function moverLead(id){
+  const lead=leads.find(l=>l.id===id);if(!lead)return;
+  const idx=STAGES.indexOf(lead.stage);
+  if(idx<STAGES.length-1){lead.stage=STAGES[idx+1];renderPipeline();log('Lead: '+lead.nome+' → '+STAGE_LABELS[lead.stage],'lok');}
+}
+
+// ─── FOLLOW-UP ───
+async function gerarFollowup(){
+  document.getElementById('btn-fu').disabled=true;document.getElementById('fu-sp').style.display='inline-block';
+  const stage={novo:'novo lead','sem-resposta':'sem resposta 48h',interessado:'demonstrou interesse',proposta:'proposta enviada',perdido:'lead frio reativar'}[document.getElementById('fu-stage').value]||document.getElementById('fu-stage').value;
+  const canal=document.getElementById('fu-canal').value;const qty=document.getElementById('fu-qty').value;const tom=document.getElementById('fu-tom').value;
+  try{
+    const txt=await aiCall(`Tom Knauf tributarista.\n\n${avatarCtx()}\n\nSequência de ${qty} mensagens follow-up para: ${stage}. Canal: ${canal}. Tom: ${tom}.\n\nJSON sem markdown: [{"numero":N,"timing":"quando enviar","mensagem":"texto completo","objetivo":"o que essa msg tenta fazer"}]`,3000);
+    const seq=JSON.parse(txt.replace(/```json|```/g,'').trim());
+    document.getElementById('fu-output').innerHTML=seq.map(m=>`<div class="card" style="padding:12px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span class="badge binfo">Msg ${m.numero}</span>
+        <span class="badge bgray">${m.timing}</span>
+        <span style="font-size:11px;color:var(--text-3);flex:1;">${m.objetivo}</span>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:10px;font-size:12px;line-height:1.6;white-space:pre-wrap;">${m.mensagem}</div>
+      <button class="btn bsm" style="margin-top:6px;" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent)">Copiar</button>
+    </div>`).join('');
+    log(seq.length+' mensagens geradas','lok');
+  }catch(e){document.getElementById('fu-output').innerHTML=`<div class="mer">Erro: ${e.message}</div>`;}
+  document.getElementById('btn-fu').disabled=false;document.getElementById('fu-sp').style.display='none';
+}
+
+// ─── SCORE LEAD ───
+async function scoreLead(){
+  const nome=document.getElementById('ls-nome').value;if(!nome){alert('Informe o nome.');return;}
+  document.getElementById('bls').disabled=true;document.getElementById('lssp').style.display='inline-block';
+  const tipo={mei:'MEI',me:'ME/EPP',media:'Média empresa',grande:'Grande empresa'}[document.getElementById('ls-tipo').value];
+  const fat={'ate100k':'até R$100k','100k-500k':'R$100k–500k','500k-2m':'R$500k–2M','acima2m':'acima R$2M'}[document.getElementById('ls-fat').value];
+  const msg=document.getElementById('ls-msg').value;
+  try{
+    const txt=await aiCall(`Tom Knauf tributarista. Avalie lead de 0-100:\n\nNOME: ${nome}\nCARGO: ${document.getElementById('ls-cargo').value}\nTIPO: ${tipo}\nFATURAMENTO: ${fat}\nMENSAGEM: ${msg||'não informada'}\n\nJSON sem markdown: {"score":N,"tier":"HOT|WARM|COLD","prioridade":"ALTA|MEDIA|BAIXA","resumo":"max 80 chars","abordagem":"como abordar max 100 chars","valor_estimado":"ticket médio"}`,500);
+    const r=JSON.parse(txt.replace(/```json|```/g,'').trim());
+    const tc={HOT:'berr',WARM:'bwarn',COLD:'bgray'}[r.tier]||'bgray';
+    document.getElementById('ls-result').innerHTML=`<div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <div class="sr ${r.score>=70?'sh':r.score>=40?'sm':'sl'}" style="width:44px;height:44px;font-size:16px;">${r.score}</div>
+        <div><div style="font-size:15px;font-weight:600;">${nome}</div>
+        <div style="display:flex;gap:6px;margin-top:4px;"><span class="badge ${tc}">${r.tier}</span><span class="badge bgray">${r.prioridade}</span></div></div>
+      </div>
+      <div class="g2">
+        <div><div class="ml">Resumo</div><div style="font-size:12px;">${r.resumo}</div></div>
+        <div><div class="ml">Ticket estimado</div><div style="font-size:14px;font-weight:600;color:var(--accent);">${r.valor_estimado||'—'}</div></div>
+      </div>
+      <div style="margin-top:10px;padding:10px;background:var(--surface2);border-radius:8px;">
+        <div class="ml">Como abordar</div>
+        <div style="font-size:12px;">${r.abordagem}</div>
+      </div>
+    </div>`;
+    log('Lead qualificado: '+nome+' — Score '+r.score+' ('+r.tier+')','lok');
+  }catch(e){document.getElementById('ls-result').innerHTML=`<div class="mer">Erro: ${e.message}</div>`;}
+  document.getElementById('bls').disabled=false;document.getElementById('lssp').style.display='none';
+}
+
+// ─── GESTOR ───
+async function runGestor(){
+  document.getElementById('btn-gest').disabled=true;document.getElementById('gest-sp').style.display='inline-block';
+  const orc=document.getElementById('g-orc').value||'1500';
+  const mLeads=document.getElementById('g-leads').value||'50';
+  const mVendas=document.getElementById('g-vendas').value||'5';
+  const sit=document.getElementById('g-sit').value||'Iniciando agora.';
+  try{
+    const txt=await aiCall(`Gestor de marketing sênior especialista em tributação.\n\n${avatarCtx()}\n\nSITUAÇÃO: ${sit}\nORÇAMENTO: R$${orc}/mês\nMETA LEADS: ${mLeads}/mês\nMETA VENDAS: ${mVendas}/mês\nLEADS CRM: ${leads.length}\n\nAnalise e decida. Seja direto.\n\nJSON sem markdown: {"diagnostico":"...","prioridade_numero1":"...","decisoes":[{"area":"...","acao":"...","prazo":"hoje|semana|mês","impacto":"...","prioridade":"alta|media|baixa","budget":"..."}],"o_que_parar":"...","o_que_escalar":"...","projecao_30d":"...","alerta":"..."}`,2500);
+    const r=JSON.parse(txt.replace(/```json|```/g,'').trim());
+    document.getElementById('gest-output').innerHTML=`<div class="card" style="border-left:3px solid var(--accent);">
+      <div class="output-block" style="background:var(--accent-light);border-left-color:var(--accent);"><div class="output-label">Diagnóstico</div><div class="output-text" style="font-size:13px;">${r.diagnostico}</div></div>
+      <div class="output-block" style="border-left-color:var(--red);"><div class="output-label">🎯 Prioridade #1 — faça agora</div><div class="output-text" style="font-size:15px;font-weight:700;">${r.prioridade_numero1}</div></div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">Decisões</div>
+        ${(r.decisoes||[]).map(d=>`<div class="decision-card ${d.prioridade==='alta'?'action':d.prioridade==='media'?'warning':'approved'}" style="display:flex;gap:10px;align-items:flex-start;">
+          <div class="p-ind ${d.prioridade==='alta'?'p-high':d.prioridade==='media'?'p-med':'p-low'}"></div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+              <span class="badge binfo">${d.area}</span>
+              <span class="badge ${d.prioridade==='alta'?'berr':d.prioridade==='media'?'bwarn':'bok'}">${(d.prioridade||'').toUpperCase()}</span>
+              <span class="badge bgray">${d.prazo}</span>
+              ${d.budget?`<span class="badge bgold">${d.budget}</span>`:''}
+            </div>
+            <div style="font-size:13px;font-weight:600;">${d.acao}</div>
+            <div style="font-size:11px;color:var(--text-3);">Impacto: ${d.impacto}</div>
+          </div>
+        </div>`).join('')}
+      </div>
+      <div class="g2">
+        <div class="output-block" style="border-left-color:var(--red);"><div class="output-label">O que PARAR</div><div class="output-text">${r.o_que_parar}</div></div>
+        <div class="output-block" style="border-left-color:var(--green);"><div class="output-label">O que ESCALAR</div><div class="output-text">${r.o_que_escalar}</div></div>
+      </div>
+      <div class="output-block"><div class="output-label">Projeção 30 dias</div><div class="output-text" style="font-weight:600;">${r.projecao_30d}</div></div>
+      ${r.alerta?`<div class="output-block" style="border-left-color:var(--orange);"><div class="output-label">⚠ Alerta</div><div class="output-text">${r.alerta}</div></div>`:''}
+    </div>`;
+    log('Gestor executou','lok');
+  }catch(e){document.getElementById('gest-output').innerHTML=`<div class="mer">Erro: ${e.message}</div>`;}
+  document.getElementById('btn-gest').disabled=false;document.getElementById('gest-sp').style.display='none';
+}
+
+// ─── OFERTAS ───
+async function gerarOfertas(){
+  document.getElementById('btn-of').disabled=true;document.getElementById('of-sp').style.display='inline-block';
+  const serv={planejamento:'Planejamento Tributário',mentoria:'Mentoria 1:1 (R$1.200/mês)',okto:'OKTO Contabilidade SaaS'}[document.getElementById('of-serv').value];
+  const qty=document.getElementById('of-qty').value;
+  const agr={suave:'educativo e consultivo',medio:'direto e persuasivo',forte:'urgência real e agressivo'}[document.getElementById('of-agr').value];
+  try{
+    const txt=await aiCall(`Tom Knauf tributarista.\n\n${avatarCtx()}\n\nCrie ${qty} ofertas para: ${serv}. Tom: ${agr}.\n\nJSON sem markdown: [{"headline":"...","promessa":"...","beneficios":["..."],"urgencia":"...","cta":"...","quebra_objecao":"..."}]`,3000);
+    const ofertas=JSON.parse(txt.replace(/```json|```/g,'').trim());
+    document.getElementById('of-output').innerHTML=ofertas.map((o,i)=>`<div class="card" style="border-left:3px solid var(--accent);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><span class="badge bwarn">Oferta ${i+1}</span></div>
+      <div class="output-block"><div class="output-label">Headline</div><div class="output-text" style="font-size:15px;font-weight:700;">${o.headline}</div></div>
+      <div class="output-block"><div class="output-label">Promessa</div><div class="output-text">${o.promessa}</div></div>
+      <div class="output-block"><div class="output-label">Benefícios</div><div class="output-text">${(o.beneficios||[]).map(b=>'→ '+b).join('\n')}</div></div>
+      <div class="g2">
+        <div class="output-block"><div class="output-label">Urgência</div><div class="output-text">${o.urgencia}</div></div>
+        <div class="output-block"><div class="output-label">Quebra de objeção</div><div class="output-text">${o.quebra_objecao}</div></div>
+      </div>
+      <div style="margin-top:8px;padding:10px;background:var(--accent-light);border-radius:8px;font-size:13px;font-weight:700;color:var(--accent);">CTA: ${o.cta}</div>
+    </div>`).join('');
+    log(ofertas.length+' ofertas geradas','lok');
+  }catch(e){document.getElementById('of-output').innerHTML=`<div class="mer">Erro: ${e.message}</div>`;}
+  document.getElementById('btn-of').disabled=false;document.getElementById('of-sp').style.display='none';
+}
+
+// ─── INIT ───
+window.addEventListener('load',()=>{
+  carregarConfig();
+  // Default avatar tags
+  const dd=['Paga imposto demais sem saber','Esta no regime errado','Com medo da Reforma Tributária 2026'];
+  const ds=['Pagar menos imposto legalmente','Ter previsibilidade fiscal'];
+  const ob=['Ja tenho contador','E muito caro'];
+  dd.forEach(d=>{const s=document.createElement('span');s.className='tag';s.innerHTML=d+' <span class="x" onclick="this.parentElement.remove()">✕</span>';document.getElementById('dores-tags').appendChild(s);});
+  ds.forEach(d=>{const s=document.createElement('span');s.className='tag';s.innerHTML=d+' <span class="x" onclick="this.parentElement.remove()">✕</span>';document.getElementById('desejos-tags').appendChild(s);});
+  ob.forEach(d=>{const s=document.createElement('span');s.className='tag';s.innerHTML=d+' <span class="x" onclick="this.parentElement.remove()">✕</span>';document.getElementById('objecoes-tags').appendChild(s);});
+  renderPipeline();
+  // Init DM
+  addDMMsg('ai',document.getElementById('dm-intro').value);
+  // Init DM tabs — mostrar só inbox
+  ['esc','com','cfg','hist'].forEach(t=>{const el=document.getElementById('dmtab-'+t);if(el)el.style.display='none';});
+  initBank();
+});
+
+// === CONFIGURACOES ===
+var CFG={ant:'',oai:'',meta:'',provider:'claude',nome:'Tom Knauf',ig:'@tomknauf_',wa:'https://wa.me/5567999999999',site:'https://tomknauf.com.br'};
+
+function carregarConfig(){
+  try{
+    var s=localStorage.getItem('tk-config');
+    if(s) CFG=Object.assign(CFG,JSON.parse(s));
+    var ids={ant:'cfg-ant',oai:'cfg-oai',meta:'cfg-meta',nome:'cfg-nome',ig:'cfg-ig',wa:'cfg-wa',site:'cfg-site'};
+    Object.keys(ids).forEach(function(k){var e=document.getElementById(ids[k]);if(e)e.value=CFG[k]||'';});
+    var pv=document.getElementById('cfg-ai-provider');if(pv)pv.value=CFG.provider||'claude';
+    if(CFG.meta){var ti=document.getElementById('ti');if(ti)ti.value=CFG.meta;}
+    atualizarStatusIA();
+  }catch(e){}
+}
+
+function salvarConfig(){
+  CFG.ant=(document.getElementById('cfg-ant')||{}).value||'';
+  CFG.oai=(document.getElementById('cfg-oai')||{}).value||'';
+  CFG.meta=(document.getElementById('cfg-meta')||{}).value||'';
+  CFG.provider=(document.getElementById('cfg-ai-provider')||{}).value||'claude';
+  CFG.nome=(document.getElementById('cfg-nome')||{}).value||'Tom Knauf';
+  CFG.ig=(document.getElementById('cfg-ig')||{}).value||'';
+  CFG.wa=(document.getElementById('cfg-wa')||{}).value||'';
+  CFG.site=(document.getElementById('cfg-site')||{}).value||'';
+  localStorage.setItem('tk-config',JSON.stringify(CFG));
+  if(CFG.meta){var ti=document.getElementById('ti');if(ti)ti.value=CFG.meta;}
+  atualizarStatusIA();
+  var ok=document.getElementById('cfg-ok');
+  if(ok){ok.style.display='block';setTimeout(function(){ok.style.display='none';},2500);}
+  log('Configuracoes salvas','ok');
+}
+
+function atualizarStatusIA(){
+  var el=document.getElementById('ai-status');if(!el)return;
+  if(CFG.ant){el.style.background='var(--green-bg)';el.style.color='var(--green)';el.textContent='IA: Claude ativo';}
+  else if(CFG.oai){el.style.background='var(--blue-bg)';el.style.color='var(--blue)';el.textContent='IA: GPT ativo';}
+  else{el.style.background='var(--surface3)';el.style.color='var(--text3)';el.textContent='IA: nao configurada';}
+}
+
+// Override aiCall — usa chave do usuario se disponivel
+var aiCallBase=aiCall;
+aiCall=function(prompt,max){
+  max=max||2000;
+  if(CFG.ant){
+    return fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':CFG.ant,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:max,messages:[{role:'user',content:prompt}]})
+    }).then(function(r){return r.json();}).then(function(d){
+      if(d.error)throw new Error(d.error.message||JSON.stringify(d.error));
+      return d.content.map(function(c){return c.text||'';}).join('');
+    });
+  }
+  if(CFG.oai){
+    return fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+CFG.oai},
+      body:JSON.stringify({model:'gpt-4o',max_tokens:max,messages:[{role:'user',content:prompt}]})
+    }).then(function(r){return r.json();}).then(function(d){
+      if(d.error)throw new Error(d.error.message);
+      return d.choices[0].message.content||'';
+    });
+  }
+  return aiCallBase(prompt,max);
+};
+
+// === IMPORTAR POSTS ===
+var postsImportados=[];
+
+function importarPost(){
+  var titulo=(document.getElementById('imp-titulo')||{}).value||'';
+  var caption=(document.getElementById('imp-caption')||{}).value||'';
+  var pilar=(document.getElementById('imp-pilar')||{}).value||'auto';
+  var s1=(document.getElementById('imp-slide1')||{}).value||'';
+  var s2=(document.getElementById('imp-slide2')||{}).value||'';
+  var s3=(document.getElementById('imp-slide3')||{}).value||'';
+  if(!titulo||!caption){alert('Preencha titulo e legenda.');return;}
+  hashContent(caption).then(function(h){
+    var ok=document.getElementById('imp-ok');
+    if(hashSet.has(h)){if(ok){ok.style.display='block';ok.textContent='Esse post ja existe no banco.';}return;}
+    hashSet.add(h);
+    var post={id:'imp-'+Date.now(),title:titulo,pillar:pilar,caption:caption,slides:[s1,s2,s3,''],status:'approved',score:9,scoreDetails:{total:9,aprovado:true,justificativa:'Importado manualmente'},hash:h,createdAt:Date.now(),importado:true};
+    postBank.push(post);postsImportados.push(post);
+    document.getElementById('imp-titulo').value='';
+    document.getElementById('imp-caption').value='';
+    if(ok){ok.style.display='block';ok.textContent='Post adicionado! Status: Aprovado. Score: 9/10.';}
+    updateStats();renderImpLista();
+    log('Post importado: '+titulo,'ok');
+  });
+}
+
+function importarJSON(){
+  var raw=(document.getElementById('imp-json')||{}).value||'';
+  if(!raw){alert('Cole o JSON primeiro.');return;}
+  var jspOk=document.getElementById('imp-json-ok');
+  var jspErr=document.getElementById('imp-json-err');
+  var jspSp=document.getElementById('imp-json-sp');
+  if(jspErr)jspErr.style.display='none';
+  if(jspOk)jspOk.style.display='none';
+  if(jspSp)jspSp.style.display='inline-block';
+  var posts;
+  try{posts=JSON.parse(raw);}catch(e){
+    if(jspErr){jspErr.style.display='block';jspErr.textContent='JSON invalido: '+e.message;}
+    if(jspSp)jspSp.style.display='none';return;
+  }
+  if(!Array.isArray(posts))posts=[posts];
+  var added=0,dups=0;
+  var chain=Promise.resolve();
+  posts.forEach(function(p){
+    chain=chain.then(function(){
+      var caption=p.caption||p.legenda||p.texto||'';
+      var title=p.title||p.titulo||p.nome||'Post importado';
+      var pillar=p.pillar||p.pilar||'auto';
+      if(!caption)return;
+      return hashContent(caption).then(function(h){
+        if(hashSet.has(h)){dups++;return;}
+        hashSet.add(h);
+        var post={id:'imp-'+Date.now()+'-'+Math.random().toString(36).substr(2,4),title:title,pillar:pillar,caption:caption,slides:[p.slide1||'',p.slide2||'',p.slide3||'',''],status:'approved',score:9,scoreDetails:{total:9,aprovado:true,justificativa:'Importado via JSON'},hash:h,createdAt:Date.now(),importado:true};
+        postBank.push(post);postsImportados.push(post);added++;
+      });
+    });
+  });
+  chain.then(function(){
+    if(jspSp)jspSp.style.display='none';
+    if(jspOk){jspOk.style.display='block';jspOk.textContent=added+' posts importados'+(dups?' · '+dups+' duplicatas ignoradas':'')+'. Todos aprovados.';}
+    var jv=document.getElementById('imp-json');if(jv)jv.value='';
+    updateStats();renderImpLista();
+    log(added+' posts importados via JSON','ok');
+  });
+}
+
+function renderImpLista(){
+  var el=document.getElementById('imp-lista');if(!el)return;
+  var imp=postBank.filter(function(p){return p.importado;});
+  if(!imp.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);">Nenhum post importado ainda.</div>';return;}
+  el.innerHTML=imp.map(function(p){
+    return '<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);">'
+      +'<span class="badge bpu2" style="font-size:9px;">'+(PL[p.pillar]||p.pillar)+'</span>'
+      +'<span style="flex:1;font-size:12px;font-weight:500;">'+p.title+'</span>'
+      +'<span class="badge bok">Aprovado</span></div>';
+  }).join('');
+}
+
+</script>
+</body>
+</html>
