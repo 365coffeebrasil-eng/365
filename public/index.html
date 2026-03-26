@@ -2747,6 +2747,119 @@ function alterarCredenciais(){
   log('Credenciais alteradas','ok');
 }
 
+
+// ═══════════════════════════════════════════════════
+// AGENDA ALTERNADA: carrossel (dia par) / vídeo (dia ímpar)
+// ═══════════════════════════════════════════════════
+
+async function agendarAlternado() {
+  const aprovados = postBank.filter(p => ['approved','winner'].includes(p.status));
+  if (!aprovados.length) { alert('Sem posts aprovados. Gere e aprove posts primeiro.'); return; }
+  const hora = 8;
+  const r = await fetch('/api/schedule/alternated', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      posts: aprovados.map(p => ({ id:p.id, title:p.title, caption:p.caption, slides:(p.slides||[]).filter(s=>s&&s.startsWith('http')), videoUrl: p.videoUrl||null })),
+      startDate: new Date().toISOString(), daysInterval: 1, publishHour: hora
+    })
+  });
+  const d = await r.json();
+  if (!d.ok) { log('Erro ao agendar: '+(d.error||'?'), 'ler'); return; }
+  const info = d.queue.map((item, i) => {
+    const dt = new Date(item.scheduledAt);
+    const data = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    return (i%2===0?'📸 Carrossel':'🎬 Vídeo HeyGen') + ' — ' + (item.post.title||'').substring(0,35) + ' — ' + data;
+  }).join('\n');
+  alert('✅ ' + d.scheduled + ' posts agendados!\n\n' + info);
+  log('Agenda alternada: ' + d.scheduled + ' posts enviados ao servidor', 'lok');
+  if (typeof syncFilaServidor === 'function') syncFilaServidor();
+}
+
+// Salvar token no servidor ao conectar
+async function salvarTokenServidor(token) {
+  if (!token || token.length < 50) return;
+  try {
+    const r = await fetch('/api/token/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token }) });
+    const d = await r.json();
+    if (d.ok) {
+      log('Token salvo no servidor — ' + d.daysLeft + ' dias', 'lok');
+      const btn = document.getElementById('btn-renovar-token');
+      if (btn) btn.textContent = '🔄 Renovar (' + d.daysLeft + ' dias)';
+    }
+  } catch(e) { console.error('salvarTokenServidor:', e.message); }
+}
+
+// HeyGen: gerar vídeo a partir de post aprovado
+async function gerarVideoHeyGenPost(postId) {
+  const post = postBank.find(p => p.id === postId);
+  if (!post) return;
+  const cfgR = await fetch('/api/heygen/config');
+  const cfg = await cfgR.json();
+  if (!cfg.hasKey || !cfg.avatarId) {
+    alert('Configure HeyGen:\n- API Key\n- Avatar ID\n\nVá em Configurações → HeyGen');
+    return;
+  }
+  const btnEl = document.getElementById('hg-btn-'+postId);
+  if (btnEl) { btnEl.disabled=true; btnEl.textContent='Gerando script...'; }
+  try {
+    const script = await aiCall(
+      'Tom Knauf tributarista. Script de vídeo 60s falado para câmera, baseado nesta legenda:\n\n' + post.caption.substring(0,400) + '\n\nRegras: 120-150 palavras, gancho nos primeiros 3s, CTA WhatsApp no final. Retorne SOMENTE o texto do script.',
+      400
+    );
+    if (btnEl) btnEl.textContent='Enviando para HeyGen...';
+    const genR = await fetch('/api/heygen/generate', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ script, avatarId: cfg.avatarId, voiceId: cfg.voiceId })
+    });
+    const gen = await genR.json();
+    if (!gen.ok) throw new Error(gen.error);
+    post.heygenVideoId = gen.videoId;
+    post.heygenStatus = 'processing';
+    log('HeyGen: processando vídeo ID ' + gen.videoId, 'lok');
+    if (btnEl) { btnEl.textContent='⏳ Processando...'; }
+    alert('✅ Vídeo enviado!\nID: ' + gen.videoId + '\nProcessamento: 3-10 min');
+    // Iniciar polling
+    _heygenPoll(post, btnEl);
+  } catch(e) {
+    alert('Erro HeyGen: ' + e.message);
+    if (btnEl) { btnEl.disabled=false; btnEl.textContent='🎬 Gerar vídeo'; }
+    log('HeyGen erro: ' + e.message, 'ler');
+  }
+}
+
+async function _heygenPoll(post, btnEl) {
+  let attempts = 0;
+  const poll = async () => {
+    try {
+      const r = await fetch('/api/heygen/status/' + post.heygenVideoId);
+      const d = await r.json();
+      if (d.status === 'completed' && d.videoUrl) {
+        post.heygenStatus = 'ready';
+        post.videoUrl = d.videoUrl;
+        if (btnEl) { btnEl.disabled=false; btnEl.textContent='✅ Vídeo pronto'; }
+        log('HeyGen: vídeo pronto — ' + post.title.substring(0,40), 'lok');
+        alert('🎬 Vídeo pronto!\n"' + post.title.substring(0,40) + '"\n\nAcesse o Banco para publicar ou agendar.');
+        if (typeof renderBanco === 'function') renderBanco();
+        return;
+      }
+      if (d.status === 'failed') { log('HeyGen: falha', 'ler'); if (btnEl) { btnEl.disabled=false; btnEl.textContent='❌ Falhou — tentar novamente'; } return; }
+      if (++attempts < 60) setTimeout(poll, 10000);
+      else { log('HeyGen: timeout', 'ler'); }
+    } catch(e) { if (++attempts < 60) setTimeout(poll, 10000); }
+  };
+  setTimeout(poll, 15000);
+}
+
+// Auto-salvar token ao conectar — hook no connect()
+const _origConnect = typeof connect === 'function' ? connect : null;
+if (_origConnect) {
+  window.connect = async function() {
+    await _origConnect();
+    const token = document.getElementById('ti') ? document.getElementById('ti').value : '';
+    if (token) await salvarTokenServidor(token);
+  };
+}
+
 </script>
 </body>
 </html>
