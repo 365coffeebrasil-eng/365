@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ── STORAGE
+// STORAGE
 const DATA_FILE = path.join(__dirname, 'data.json');
 function loadData() {
   try { if (fs.existsSync(DATA_FILE)) return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); } catch(e) {}
@@ -16,7 +16,20 @@ function loadData() {
 function saveData(d) { try { fs.writeFileSync(DATA_FILE, JSON.stringify(d, null, 2)); } catch(e) {} }
 let DB = loadData();
 
-// ── PROXY ANTHROPIC
+// STATUS — verificacao de saude do servidor
+app.get('/api/status', (req, res) => {
+  const days = DB.tokenExpiresAt ? Math.max(0, Math.round((DB.tokenExpiresAt - Date.now()) / 86400000)) : 0;
+  res.json({
+    ok: true,
+    version: 'v5',
+    token: { hasToken: !!DB.token, expired: DB.tokenExpiresAt ? Date.now() > DB.tokenExpiresAt : true, daysLeft: days },
+    queue: { pending: DB.queue.filter(i => i.status === 'pending').length, total: DB.queue.length },
+    heygen: { configured: !!DB.heygenKey && !!DB.heygenAvatarId },
+    uptime: process.uptime()
+  });
+});
+
+// PROXY ANTHROPIC
 app.post('/api/ai', async (req, res) => {
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -28,86 +41,63 @@ app.post('/api/ai', async (req, res) => {
   } catch(e) { res.status(500).json({ error:{ message: e.message } }); }
 });
 
-// ── TOKEN META
+// TOKEN META
 app.post('/api/token/save', (req, res) => {
-  const { token } = req.body;
-  if (!token) return res.status(400).json({ ok:false, error:'Token obrigatorio' });
-  const now = Date.now();
-  DB.token = token; DB.tokenSavedAt = now; DB.tokenExpiresAt = now + 60*24*60*60*1000;
-  saveData(DB);
-  console.log('[TOKEN] Salvo. Expira em 60 dias.');
-  res.json({ ok:true, expiresAt: DB.tokenExpiresAt });
+  const { token } = req.body; if (!token) return res.status(400).json({ ok:false, error:'Token obrigatorio' });
+  const now = Date.now(); DB.token = token; DB.tokenSavedAt = now; DB.tokenExpiresAt = now + 60*24*60*60*1000;
+  saveData(DB); console.log('[TOKEN] Salvo. Expira em 60 dias.');
+  res.json({ ok:true, daysLeft:60, expiresAt: DB.tokenExpiresAt });
 });
 
 app.get('/api/token/status', (req, res) => {
-  const now = Date.now();
-  const daysLeft = DB.tokenExpiresAt ? Math.max(0, Math.round((DB.tokenExpiresAt - now) / 86400000)) : 0;
+  const now = Date.now(); const daysLeft = DB.tokenExpiresAt ? Math.max(0, Math.round((DB.tokenExpiresAt - now) / 86400000)) : 0;
   res.json({ hasToken:!!DB.token, expired: DB.tokenExpiresAt ? now > DB.tokenExpiresAt : true, daysLeft, expiresAt: DB.tokenExpiresAt });
 });
 
 app.post('/api/token/renew', async (req, res) => {
-  const token = req.body.token || DB.token;
-  if (!token) return res.status(400).json({ ok:false, error:'Sem token' });
+  const token = req.body.token || DB.token; if (!token) return res.status(400).json({ ok:false, error:'Sem token' });
   try {
-    const appId = process.env.META_APP_ID||'';
-    const appSecret = process.env.META_APP_SECRET||'';
+    const appId = process.env.META_APP_ID||'', appSecret = process.env.META_APP_SECRET||'';
     if (!appId || !appSecret) {
-      const now = Date.now();
-      DB.token = token; DB.tokenSavedAt = now; DB.tokenExpiresAt = now + 60*24*60*60*1000;
-      saveData(DB);
-      return res.json({ ok:true, token, expiresAt: DB.tokenExpiresAt, note:'Renovado localmente' });
+      const now = Date.now(); DB.token = token; DB.tokenSavedAt = now; DB.tokenExpiresAt = now + 60*24*60*60*1000;
+      saveData(DB); return res.json({ ok:true, token, daysLeft:60, expiresAt: DB.tokenExpiresAt, note:'Renovado localmente' });
     }
-    const url = `https://graph.facebook.com/v19.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${appId}&client_secret=${appSecret}&fb_exchange_token=${token}`;
-    const r = await fetch(url); const d = await r.json();
-    if (d.error) throw new Error(d.error.message);
-    const now = Date.now();
-    DB.token = d.access_token; DB.tokenSavedAt = now; DB.tokenExpiresAt = now + 60*24*60*60*1000;
-    saveData(DB);
-    res.json({ ok:true, token: d.access_token, expiresAt: DB.tokenExpiresAt });
+    const r = await fetch(`https://graph.facebook.com/v19.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${appId}&client_secret=${appSecret}&fb_exchange_token=${token}`);
+    const d = await r.json(); if (d.error) throw new Error(d.error.message);
+    const now = Date.now(); DB.token = d.access_token; DB.tokenSavedAt = now; DB.tokenExpiresAt = now + 60*24*60*60*1000;
+    saveData(DB); res.json({ ok:true, token: d.access_token, daysLeft:60, expiresAt: DB.tokenExpiresAt });
   } catch(e) { res.status(500).json({ ok:false, error: e.message }); }
 });
 
-// ── FILA DE PUBLICACAO
-app.get('/api/queue', (req, res) => {
-  res.json({ queue: DB.queue, published: DB.published.slice(-50) });
-});
+// FILA
+app.get('/api/queue', (req, res) => res.json({ queue: DB.queue, published: DB.published.slice(-50) }));
 
 app.post('/api/queue/add', (req, res) => {
-  const { post, scheduledAt, type } = req.body;
-  if (!post) return res.status(400).json({ ok:false, error:'Post obrigatorio' });
+  const { post, scheduledAt, type } = req.body; if (!post) return res.status(400).json({ ok:false });
   const item = { id:'q-'+Date.now()+'-'+Math.random().toString(36).substr(2,4), post, type:type||'carousel', scheduledAt:scheduledAt||Date.now(), status:'pending', createdAt:Date.now() };
-  DB.queue.push(item); saveData(DB);
-  res.json({ ok:true, item });
+  DB.queue.push(item); saveData(DB); res.json({ ok:true, item });
 });
 
-app.delete('/api/queue/:id', (req, res) => {
-  DB.queue = DB.queue.filter(i => i.id !== req.params.id);
-  saveData(DB); res.json({ ok:true });
-});
+app.delete('/api/queue/:id', (req, res) => { DB.queue = DB.queue.filter(i => i.id !== req.params.id); saveData(DB); res.json({ ok:true }); });
 
 app.post('/api/publish/now', async (req, res) => {
   const { caption, imageUrls, videoUrl } = req.body;
-  if (!DB.token) return res.status(400).json({ ok:false, error:'Token nao configurado' });
+  if (!DB.token) return res.status(400).json({ ok:false, error:'Token nao configurado no servidor. Clique em Conectar Meta primeiro.' });
   try {
     const postId = await publishToInstagram({ caption, imageUrls, videoUrl });
     DB.published.push({ postId, caption:(caption||'').substring(0,80), type:videoUrl?'video':'carousel', publishedAt:Date.now() });
-    saveData(DB);
-    res.json({ ok:true, postId });
+    saveData(DB); res.json({ ok:true, postId });
   } catch(e) { res.status(500).json({ ok:false, error: e.message }); }
 });
 
-// ── HEYGEN
+// HEYGEN
 app.post('/api/heygen/config', (req, res) => {
   const { apiKey, avatarId, voiceId } = req.body;
-  if (apiKey) DB.heygenKey = apiKey;
-  if (avatarId) DB.heygenAvatarId = avatarId;
-  if (voiceId) DB.heygenVoiceId = voiceId;
+  if (apiKey) DB.heygenKey = apiKey; if (avatarId) DB.heygenAvatarId = avatarId; if (voiceId) DB.heygenVoiceId = voiceId;
   saveData(DB); res.json({ ok:true });
 });
 
-app.get('/api/heygen/config', (req, res) => {
-  res.json({ hasKey:!!DB.heygenKey, avatarId:DB.heygenAvatarId, voiceId:DB.heygenVoiceId });
-});
+app.get('/api/heygen/config', (req, res) => res.json({ hasKey:!!DB.heygenKey, avatarId:DB.heygenAvatarId, voiceId:DB.heygenVoiceId }));
 
 app.post('/api/heygen/generate', async (req, res) => {
   const { script, avatarId, voiceId } = req.body;
@@ -115,15 +105,10 @@ app.post('/api/heygen/generate', async (req, res) => {
   if (!script) return res.status(400).json({ ok:false, error:'Script obrigatorio' });
   try {
     const r = await fetch('https://api.heygen.com/v2/video/generate', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'X-Api-Key': DB.heygenKey },
-      body: JSON.stringify({
-        video_inputs:[{ character:{ type:'avatar', avatar_id: avatarId||DB.heygenAvatarId, avatar_style:'normal' }, voice:{ type:'text', input_text: script, voice_id: voiceId||DB.heygenVoiceId||'pt-BR-FranciscaNeural' } }],
-        dimension:{ width:1080, height:1920 }
-      })
+      method:'POST', headers:{ 'Content-Type':'application/json', 'X-Api-Key': DB.heygenKey },
+      body: JSON.stringify({ video_inputs:[{ character:{ type:'avatar', avatar_id:avatarId||DB.heygenAvatarId, avatar_style:'normal' }, voice:{ type:'text', input_text:script, voice_id:voiceId||DB.heygenVoiceId||'pt-BR-FranciscaNeural' } }], dimension:{ width:1080, height:1920 } })
     });
-    const d = await r.json();
-    if (d.error) throw new Error(d.error.message||JSON.stringify(d.error));
+    const d = await r.json(); if (d.error) throw new Error(d.error.message||JSON.stringify(d.error));
     if (!d.data||!d.data.video_id) throw new Error('HeyGen nao retornou video_id');
     res.json({ ok:true, videoId: d.data.video_id });
   } catch(e) { res.status(500).json({ ok:false, error: e.message }); }
@@ -134,36 +119,32 @@ app.get('/api/heygen/status/:videoId', async (req, res) => {
   try {
     const r = await fetch(`https://api.heygen.com/v1/video_status.get?video_id=${req.params.videoId}`, { headers:{ 'X-Api-Key': DB.heygenKey } });
     const d = await r.json();
-    if (d.error) throw new Error(d.error.message);
     res.json({ ok:true, status: d.data&&d.data.status, videoUrl: d.data&&d.data.video_url });
   } catch(e) { res.status(500).json({ ok:false, error: e.message }); }
 });
 
-// ── AGENDA ALTERNADA: dia par=carrossel, dia impar=video
+// AGENDA ALTERNADA: dia par=carrossel, dia impar=video HeyGen
 app.post('/api/schedule/alternated', (req, res) => {
   const { posts, startDate, daysInterval, publishHour } = req.body;
   const interval = daysInterval||1, hour = publishHour||8;
   if (!posts||!posts.length) return res.status(400).json({ ok:false, error:'Posts obrigatorios' });
-  const queue = [];
-  let d = new Date(startDate||Date.now());
-  d.setHours(hour,0,0,0);
-  if (d <= new Date()) d.setDate(d.getDate()+1);
+  const queue = []; let d = new Date(startDate||Date.now());
+  d.setHours(hour,0,0,0); if (d <= new Date()) d.setDate(d.getDate()+1);
   posts.forEach((post, i) => {
-    const item = { id:'sch-'+Date.now()+'-'+i, post, type: i%2===0?'carousel':'video', scheduledAt: d.getTime(), status:'pending', createdAt:Date.now() };
+    const item = { id:'sch-'+Date.now()+'-'+i, post, type:i%2===0?'carousel':'video', scheduledAt:d.getTime(), status:'pending', createdAt:Date.now() };
     queue.push(item); DB.queue.push(item);
     d = new Date(d); d.setDate(d.getDate()+interval);
   });
-  saveData(DB);
-  res.json({ ok:true, scheduled:queue.length, queue });
+  saveData(DB); res.json({ ok:true, scheduled:queue.length, queue });
 });
 
-// ── CRON: processa fila a cada 1 minuto
+// CRON: processa fila a cada 1 minuto
 setInterval(async () => {
   const now = Date.now();
   const pending = DB.queue.filter(i => i.status==='pending' && i.scheduledAt<=now);
   if (!pending.length) return;
   for (const item of pending) {
-    console.log(`[CRON] Processando: ${item.id} (${item.type})`);
+    console.log(`[CRON] ${item.type} - ${item.id}`);
     item.status = 'processing'; saveData(DB);
     try {
       const post = item.post;
@@ -173,10 +154,12 @@ setInterval(async () => {
         await publishToInstagram({ caption, videoUrl: post.videoUrl });
       } else if (imageUrls.length>=1) {
         await publishToInstagram({ caption, imageUrls });
-      } else throw new Error('Sem slides/video');
+      } else {
+        throw new Error('Sem slides ou video para publicar. Adicione URLs de imagem no post.');
+      }
       item.status = 'published'; item.publishedAt = Date.now();
       DB.published.push({ postId:item.id, caption:caption.substring(0,80), type:item.type, publishedAt:Date.now() });
-      console.log(`[CRON] Publicado: ${item.id}`);
+      console.log(`[CRON] OK: ${item.id}`);
     } catch(e) {
       item.status = 'error'; item.error = e.message;
       console.error(`[CRON] Erro ${item.id}:`, e.message);
@@ -185,22 +168,20 @@ setInterval(async () => {
   }
 }, 60*1000);
 
-// CRON: alerta token (1x/dia)
+// CRON: alerta token 1x/dia
 setInterval(() => {
   if (!DB.tokenExpiresAt) return;
   const days = Math.round((DB.tokenExpiresAt - Date.now()) / 86400000);
   if (days<=7) console.warn(`[TOKEN] ATENCAO: expira em ${days} dias!`);
 }, 24*60*60*1000);
 
-// ── PUBLISH HELPER
+// PUBLISH HELPER
 async function publishToInstagram({ caption, imageUrls, videoUrl }) {
-  const token = DB.token;
-  if (!token) throw new Error('Token nao configurado');
+  const token = DB.token; if (!token) throw new Error('Token nao configurado');
   const meR = await fetch(`https://graph.facebook.com/v19.0/me/accounts?fields=instagram_business_account&access_token=${token}`);
-  const meD = await meR.json();
-  if (meD.error) throw new Error(meD.error.message);
+  const meD = await meR.json(); if (meD.error) throw new Error(meD.error.message);
   const page = (meD.data||[]).find(p => p.instagram_business_account);
-  if (!page) throw new Error('Instagram Business nao encontrado');
+  if (!page) throw new Error('Instagram Business nao encontrado. Verifique vinculacao Pagina Facebook + Instagram.');
   const igId = page.instagram_business_account.id;
   let mediaId;
   if (videoUrl) {
@@ -251,7 +232,7 @@ async function publishToInstagram({ caption, imageUrls, videoUrl }) {
 }
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// ── WEBHOOK
+// WEBHOOK
 app.get('/webhook', (req, res) => {
   if (req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===(process.env.WEBHOOK_VERIFY_TOKEN||'tomknauf2025')) {
     res.status(200).send(req.query['hub.challenge']);
@@ -264,7 +245,8 @@ app.get('*', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.
 const PORT = process.env.PORT||3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log('Tom Knauf Content Machine v5 porta ' + PORT);
-  console.log('[CRON] Fila ativa (1 min)');
+  console.log('[CRON] Fila ativa - verifica a cada 1 min');
   const days = DB.tokenExpiresAt ? Math.round((DB.tokenExpiresAt-Date.now())/86400000) : 0;
-  console.log('[TOKEN]', DB.token ? `Ativo, ${days} dias` : 'Nao configurado');
+  console.log('[TOKEN]', DB.token ? `Ativo, ${days} dias restantes` : 'Nao configurado - conecte o Meta');
+  console.log('[HEYGEN]', DB.heygenKey ? 'Configurado' : 'Nao configurado');
 });
