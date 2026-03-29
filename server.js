@@ -293,12 +293,21 @@ JSON sem markdown: [{"title":"...","pillar":"auto|alert|edu|reforma|mentor","cap
     const aiD = await aiR.json();
     const posts = JSON.parse(aiD.content[0].text.replace(/```json|```/g, '').trim());
     
-    // Adicionar slides de template em todos os posts
-    const postsComSlides = posts.map((p, i) => ({
-      ...p, id: 'auto-'+Date.now()+'-'+i,
-      slides: DB.slideUrls || [],
-      status: 'approved', score: 8, createdAt: Date.now()
-    }));
+    // Gerar slides SVG dinamicamente para cada post
+    const host = req.protocol + '://' + req.get('host');
+    const postsComSlides = posts.map((p, i) => {
+      // Extrair pontos principais do caption para os slides
+      const linhas = p.caption.split('\n').filter(l => l.trim() && l.length > 5).slice(0, 3);
+      const ponto1 = linhas[0] || p.title;
+      const ponto2 = linhas[1] || 'Fator R e Regime Tributario';
+      const slides = [
+        host + '/api/image/slide?' + new URLSearchParams({ text: p.title, subtitle: 'Tom Knauf Tributarista', num: 1, total: 4, tipo: 'capa' }),
+        host + '/api/image/slide?' + new URLSearchParams({ text: ponto1.substring(0,60), subtitle: '', num: 2, total: 4, tipo: 'conteudo' }),
+        host + '/api/image/slide?' + new URLSearchParams({ text: ponto2.substring(0,60), subtitle: '', num: 3, total: 4, tipo: 'conteudo' }),
+        host + '/api/image/slide?' + new URLSearchParams({ text: 'Quer reduzir seus impostos?', subtitle: 'WhatsApp - link na bio', num: 4, total: 4, tipo: 'cta' }),
+      ];
+      return { ...p, id: 'auto-'+Date.now()+'-'+i, slides, status: 'approved', score: 8, createdAt: Date.now() };
+    });
     
     // Salvar no banco
     DB.postBank = [...(DB.postBank||[]), ...postsComSlides];
@@ -431,6 +440,111 @@ async function publishToInstagram({ caption, imageUrls, videoUrl }) {
   return pd.id;
 }
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+
+// ═══════════════════════════════════════════════════════
+// GERADOR DE IMAGENS SVG — sem dependências externas
+// Gera imagens de carrossel com identidade visual Tom Knauf
+// URL: /api/image/slide?text=...&subtitle=...&num=1
+// ═══════════════════════════════════════════════════════
+
+app.get('/api/image/slide', (req, res) => {
+  const text = decodeURIComponent(req.query.text || 'Tom Knauf');
+  const subtitle = decodeURIComponent(req.query.subtitle || 'Inteligência Tributária');
+  const num = parseInt(req.query.num) || 1;
+  const total = parseInt(req.query.total) || 4;
+  const tipo = req.query.tipo || 'conteudo'; // capa, conteudo, cta
+
+  // Quebrar texto em linhas (max 28 chars por linha)
+  function wrapText(t, maxLen) {
+    const words = t.split(' ');
+    const lines = []; let line = '';
+    words.forEach(w => { if ((line+' '+w).trim().length > maxLen) { if(line) lines.push(line.trim()); line = w; } else { line = (line+' '+w).trim(); } });
+    if (line) lines.push(line.trim());
+    return lines.slice(0, 4);
+  }
+
+  const linhas = wrapText(text, 26);
+  const subLinhas = wrapText(subtitle, 30);
+  const yBase = tipo === 'capa' ? 480 : 500;
+  const textY = tipo === 'capa' ? 380 : 440;
+
+  // Gerar linhas de texto SVG
+  const textLines = linhas.map((l, i) => `<text x="540" y="${textY + i*68}" font-family="Georgia,serif" font-size="${tipo==='capa'?56:52}" font-weight="bold" fill="#F5E6C0" text-anchor="middle" filter="url(#shadow)">${l}</text>`).join('\n    ');
+  const subLines = subLinhas.map((l, i) => `<text x="540" y="${textY + linhas.length*68 + 20 + i*40}" font-family="Arial,sans-serif" font-size="28" fill="#B07D2E" text-anchor="middle">${l}</text>`).join('\n    ');
+  const numText = tipo !== 'capa' ? `<text x="990" y="1040" font-family="Arial,sans-serif" font-size="24" fill="#6B6560" text-anchor="end">${num}/${total}</text>` : '';
+  const ctaBadge = tipo === 'cta' ? `<rect x="340" y="880" width="400" height="80" rx="40" fill="#B07D2E"/>
+    <text x="540" y="930" font-family="Arial,sans-serif" font-size="30" font-weight="bold" fill="white" text-anchor="middle">WhatsApp (link na bio)</text>` : '';
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <defs>
+    <filter id="shadow"><feDropShadow dx="2" dy="2" stdDeviation="4" flood-opacity="0.5"/></filter>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1A1916"/>
+      <stop offset="50%" style="stop-color:#2A2820"/>
+      <stop offset="100%" style="stop-color:#1A1916"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#B07D2E;stop-opacity:0"/>
+      <stop offset="50%" style="stop-color:#B07D2E;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#B07D2E;stop-opacity:0"/>
+    </linearGradient>
+  </defs>
+  <!-- Fundo escuro -->
+  <rect width="1080" height="1080" fill="url(#bg)"/>
+  <!-- Textura sutil -->
+  <rect width="1080" height="1080" fill="none" stroke="#B07D2E" stroke-width="0.5" opacity="0.1"/>
+  <!-- Borda dourada -->
+  <rect x="30" y="30" width="1020" height="1020" fill="none" stroke="#B07D2E" stroke-width="2" rx="8"/>
+  <rect x="40" y="40" width="1000" height="1000" fill="none" stroke="#B07D2E" stroke-width="0.5" rx="6" opacity="0.4"/>
+  <!-- Linha decorativa topo -->
+  <rect x="0" y="0" width="1080" height="8" fill="url(#gold)"/>
+  <!-- Logo TK -->
+  <text x="540" y="120" font-family="Georgia,serif" font-size="36" font-weight="bold" fill="#B07D2E" text-anchor="middle" letter-spacing="8">TOM KNAUF</text>
+  <text x="540" y="155" font-family="Arial,sans-serif" font-size="16" fill="#6B6560" text-anchor="middle" letter-spacing="4">INTELIGÊNCIA TRIBUTÁRIA</text>
+  <!-- Linha separadora -->
+  <rect x="200" y="175" width="680" height="1" fill="url(#gold)" opacity="0.6"/>
+  <!-- Texto principal -->
+  ${textLines}
+  ${subLines}
+  <!-- Linha inferior -->
+  <rect x="200" y="960" width="680" height="1" fill="url(#gold)" opacity="0.6"/>
+  <!-- Instagram -->
+  <text x="540" y="1000" font-family="Arial,sans-serif" font-size="22" fill="#6B6560" text-anchor="middle">@tomknauf_</text>
+  <!-- Numero do slide -->
+  ${numText}
+  <!-- CTA badge -->
+  ${ctaBadge}
+</svg>`;
+
+  res.setHeader('Content-Type', 'image/svg+xml');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.send(svg);
+});
+
+// Gerar URL completa de slide com texto
+app.get('/api/image/url', (req, res) => {
+  const host = req.protocol + '://' + req.get('host');
+  const { text, subtitle, num, total, tipo } = req.query;
+  const url = host + '/api/image/slide?' + new URLSearchParams({ text: text||'Conteudo', subtitle: subtitle||'', num: num||1, total: total||4, tipo: tipo||'conteudo' }).toString();
+  res.json({ url });
+});
+
+// Gerar 4 slides de carrossel para um post
+app.post('/api/image/carousel', (req, res) => {
+  const { titulo, pontos } = req.body;
+  if (!titulo) return res.status(400).json({ ok: false, error: 'titulo obrigatorio' });
+  const host = req.protocol + '://' + req.get('host');
+  const pts = pontos || ['Slide 2', 'Slide 3'];
+  
+  const slides = [
+    host + '/api/image/slide?' + new URLSearchParams({ text: titulo, subtitle: 'Tom Knauf Tributarista', num: 1, total: 4, tipo: 'capa' }),
+    host + '/api/image/slide?' + new URLSearchParams({ text: pts[0]||'Conteudo 1', subtitle: '', num: 2, total: 4, tipo: 'conteudo' }),
+    host + '/api/image/slide?' + new URLSearchParams({ text: pts[1]||'Conteudo 2', subtitle: '', num: 3, total: 4, tipo: 'conteudo' }),
+    host + '/api/image/slide?' + new URLSearchParams({ text: 'Fale comigo no WhatsApp', subtitle: 'Link na bio', num: 4, total: 4, tipo: 'cta' }),
+  ];
+  res.json({ ok: true, slides });
+});
 
 // WEBHOOK
 app.get('/webhook', (req, res) => { if (req.query['hub.mode']==='subscribe'&&req.query['hub.verify_token']===(process.env.WEBHOOK_VERIFY_TOKEN||'tomknauf2025')) { res.status(200).send(req.query['hub.challenge']); } else res.sendStatus(403); });
